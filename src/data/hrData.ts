@@ -20,6 +20,9 @@ export interface HRRequest {
   details?: string;
   requester?: string;
   requesterRole?: string;
+  aiSummary?: string;
+  aiRecommendation?: "approve" | "review" | "reject";
+  aiReasoning?: string[];
 }
 
 export const myRequests: HRRequest[] = [
@@ -65,6 +68,14 @@ export const pendingApprovals: HRRequest[] = [
     requester: "نورة العتيبي",
     requesterRole: "مصممة منتج",
     details: "من ٢٠ مايو إلى ٢٤ مايو",
+    aiSummary: "نورة لديها رصيد كافٍ (١٥ يوماً متاح)، ولا تتعارض إجازتها مع مواعيد التسليم القادمة، ولا أحد آخر في الفريق على إجازة بنفس الفترة.",
+    aiRecommendation: "approve",
+    aiReasoning: [
+      "تحققتُ من رصيد الإجازة: ١٥ يوماً متاحة ✓",
+      "راجعتُ تقويم الفريق: لا تعارض مع تسليمات حرجة ✓",
+      "تحققتُ من تداخل الإجازات: لا أحد على إجازة بنفس الفترة ✓",
+      "طبّقتُ سياسة الإجازات (المادة ٣): الطلب مطابق ✓",
+    ],
   },
   {
     id: "REQ-2049",
@@ -75,6 +86,13 @@ export const pendingApprovals: HRRequest[] = [
     requester: "خالد المطيري",
     requesterRole: "مهندس برمجيات",
     details: "يوم الخميس ١٦ مايو",
+    aiSummary: "خالد استخدم ٣ من أصل ٤ أيام عمل عن بُعد المسموحة شهرياً. لا اجتماعات حضورية مجدولة في ذلك اليوم.",
+    aiRecommendation: "approve",
+    aiReasoning: [
+      "رصيد العمل عن بُعد: ١ يوم متبقٍ هذا الشهر ✓",
+      "لا اجتماعات حضورية مجدولة ✓",
+      "أداء آخر ٣٠ يوم: ضمن المتوسط ✓",
+    ],
   },
   {
     id: "REQ-2047",
@@ -84,6 +102,13 @@ export const pendingApprovals: HRRequest[] = [
     date: "منذ ٣ ساعات",
     requester: "ريم الزهراني",
     requesterRole: "محللة بيانات",
+    aiSummary: "طلب وثيقة قياسي. جهّزتُ المسودة تلقائياً وفق القالب المعتمد، بانتظار اعتمادك للتوقيع الإلكتروني.",
+    aiRecommendation: "approve",
+    aiReasoning: [
+      "تم إنشاء المسودة من القالب المعتمد ✓",
+      "تم التحقق من بيانات الموظفة ✓",
+      "جاهز للتوقيع الإلكتروني فور الاعتماد ✓",
+    ],
   },
 ];
 
@@ -112,4 +137,106 @@ export const stats = {
   resolved: "٧٨٪",
   openRequests: 2,
   thisMonth: 12,
+};
+
+// ===== Agentic capabilities =====
+export type AgentActivityType = "auto_resolved" | "policy_check" | "scheduled" | "drafted" | "monitored";
+
+export interface AgentActivity {
+  id: string;
+  type: AgentActivityType;
+  title: string;
+  detail: string;
+  time: string;
+}
+
+export const employeeAgentActivity: AgentActivity[] = [
+  {
+    id: "act-1",
+    type: "auto_resolved",
+    title: "أصدرتُ خطاب التعريف تلقائياً",
+    detail: "تحققتُ من بياناتك، أنشأتُ المسودة، ووقّعتُها رقمياً. جاهز في بريدك.",
+    time: "قبل ٨ دقائق",
+  },
+  {
+    id: "act-2",
+    type: "policy_check",
+    title: "ذكّرتك بإجازة منتهية الصلاحية",
+    detail: "لديك ٣ أيام ستسقط نهاية ديسمبر — اقترحتُ تواريخ مناسبة.",
+    time: "اليوم",
+  },
+  {
+    id: "act-3",
+    type: "scheduled",
+    title: "جدولتُ اجتماع تقييم الأداء",
+    detail: "نسّقتُ مع مديرك ووجدتُ موعداً يناسب الطرفين: الأحد ٢ م.",
+    time: "أمس",
+  },
+];
+
+export const managerAgentActivity: AgentActivity[] = [
+  {
+    id: "mact-1",
+    type: "auto_resolved",
+    title: "اعتمدتُ ٤ طلبات روتينية نيابةً عنك",
+    detail: "ضمن الحدود المعتمدة (إجازات < ٣ أيام، رصيد كافٍ، لا تعارض).",
+    time: "اليوم",
+  },
+  {
+    id: "mact-2",
+    type: "monitored",
+    title: "رصدتُ تراكم إجازات في فريقك",
+    detail: "٣ أعضاء لديهم أكثر من ١٥ يوماً غير مستخدمة — أعددتُ خطة توزيع مقترحة.",
+    time: "قبل ساعتين",
+  },
+  {
+    id: "mact-3",
+    type: "drafted",
+    title: "صغتُ ردوداً على ٢ طلبات حساسة",
+    detail: "بانتظار مراجعتك قبل الإرسال.",
+    time: "صباح اليوم",
+  },
+];
+
+// ===== Agent plans (multi-step reasoning) =====
+export interface AgentStep {
+  id: string;
+  label: string;
+  status: "done" | "active" | "pending" | "needs_approval";
+  detail?: string;
+}
+
+export interface AgentPlan {
+  id: string;
+  goal: string;
+  context: string;
+  steps: AgentStep[];
+}
+
+export const samplePlans: Record<string, AgentPlan> = {
+  leave: {
+    id: "plan-leave",
+    goal: "تقديم طلب إجازة سنوية ٥ أيام",
+    context: "طلبك: إجازة من ٢٠ إلى ٢٤ مايو",
+    steps: [
+      { id: "s1", label: "التحقق من رصيد الإجازة", status: "done", detail: "متاح ١٣ يوماً ✓" },
+      { id: "s2", label: "فحص تعارض التقويم مع الفريق", status: "done", detail: "لا يوجد تعارض ✓" },
+      { id: "s3", label: "مطابقة سياسة الإجازات", status: "done", detail: "مطابق للمادة ٣ ✓" },
+      { id: "s4", label: "تجهيز نموذج الطلب", status: "active" },
+      { id: "s5", label: "الإرسال للمدير للاعتماد", status: "needs_approval", detail: "يحتاج تأكيدك" },
+      { id: "s6", label: "تحديث التقويم وإشعار الفريق", status: "pending" },
+    ],
+  },
+  document: {
+    id: "plan-doc",
+    goal: "إصدار خطاب تعريف بالراتب",
+    context: "موجه إلى البنك الأهلي",
+    steps: [
+      { id: "s1", label: "جلب بيانات التوظيف من النظام", status: "done" },
+      { id: "s2", label: "تطبيق قالب البنك المعتمد", status: "done" },
+      { id: "s3", label: "إنشاء المسودة", status: "active" },
+      { id: "s4", label: "التوقيع الرقمي من HR", status: "pending" },
+      { id: "s5", label: "إرسال نسخة لبريدك", status: "pending" },
+    ],
+  },
 };

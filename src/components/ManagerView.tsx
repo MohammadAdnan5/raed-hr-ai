@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Check, X, Calendar, FileText, Home, Clock } from "lucide-react";
-import { pendingApprovals, HRRequest } from "@/data/hrData";
+import { Check, X, Calendar, FileText, Home, Clock, Sparkles, ChevronDown, ChevronUp, Zap } from "lucide-react";
+import { pendingApprovals, HRRequest, managerAgentActivity } from "@/data/hrData";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { AgentActivityFeed } from "./AgentActivityFeed";
 import { cn } from "@/lib/utils";
 
 const typeIcon = (type: string) => {
@@ -24,17 +25,39 @@ export function ManagerView() {
     });
   };
 
+  const handleBulkAutoApprove = () => {
+    const safe = requests.filter((r) => r.aiRecommendation === "approve");
+    setRequests((r) => r.filter((x) => x.aiRecommendation !== "approve"));
+    toast({
+      title: "نفّذ الوكيل المهمة",
+      description: `اعتمدتُ ${safe.length} طلبات بناءً على توصياتي وأشعرتُ الموظفين.`,
+    });
+  };
+
   return (
     <div className="space-y-4">
       {/* Manager hero */}
       <div className="bento-card bg-gradient-hero">
-        <p className="text-sm text-muted-foreground mb-1">صباح الخير، م. عبدالله</p>
-        <h2 className="text-xl md:text-2xl font-bold tracking-tight leading-tight">
-          لديك <span className="text-primary num">{requests.length}</span> طلبات بانتظار قرارك
-        </h2>
-        <p className="text-sm text-muted-foreground mt-2">
-          جمعتُ كل المعلومات اللازمة لكل طلب — اعتمد بضغطة واحدة.
-        </p>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex-1 min-w-[240px]">
+            <p className="text-sm text-muted-foreground mb-1">صباح الخير، م. عبدالله</p>
+            <h2 className="text-xl md:text-2xl font-bold tracking-tight leading-tight">
+              لديك <span className="text-primary num">{requests.length}</span> طلبات بانتظار قرارك
+            </h2>
+            <p className="text-sm text-muted-foreground mt-2">
+              راجعتُ كل طلب، طبّقتُ السياسات، وأعطيتُ توصيتي — اعتمد بضغطة واحدة.
+            </p>
+          </div>
+          {requests.filter((r) => r.aiRecommendation === "approve").length > 0 && (
+            <Button
+              onClick={handleBulkAutoApprove}
+              className="rounded-full gap-2 bg-gradient-warm hover:opacity-90 shadow-coral text-primary-foreground"
+            >
+              <Zap className="h-4 w-4" />
+              اعتمد الآمنة دفعة واحدة
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Pending list */}
@@ -68,12 +91,13 @@ export function ManagerView() {
         )}
       </div>
 
+      {/* Agent activity for manager */}
+      <AgentActivityFeed activities={managerAgentActivity} />
+
       {/* Insights */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <InsightCard label="موافقات هذا الأسبوع" value="١٢" delta="+٣" />
-        <InsightCard label="متوسط وقت القرار" value="١.٢ س" delta="−٤٠٪" positive />
         <InsightCard label="طلبات الفريق" value="٢٤" delta="+٦" />
-        <InsightCard label="رضا الفريق" value="٤.٨" delta="+٠.٢" positive />
       </div>
     </div>
   );
@@ -89,6 +113,8 @@ function ApprovalCard({
   onReject: () => void;
 }) {
   const Icon = typeIcon(req.type);
+  const [showReasoning, setShowReasoning] = useState(false);
+
   return (
     <div className="p-5 hover:bg-secondary/30 transition-colors animate-fade-up">
       <div className="flex items-start gap-4">
@@ -112,6 +138,56 @@ function ApprovalCard({
           {req.details && (
             <div className="mt-2.5 rounded-lg bg-secondary/60 px-3 py-2 text-xs text-foreground">
               {req.details}
+            </div>
+          )}
+
+          {/* AI Summary & Recommendation */}
+          {req.aiSummary && (
+            <div className="mt-3 rounded-xl border border-primary/20 bg-primary-soft/40 p-3 space-y-2">
+              <div className="flex items-start gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-warm shadow-coral shrink-0">
+                  <Sparkles className="h-3 w-3 text-primary-foreground" strokeWidth={2.5} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <p className="text-[11px] font-bold text-primary">ملخص الوكيل</p>
+                    {req.aiRecommendation === "approve" && (
+                      <span className="chip bg-success-soft text-success py-0 text-[10px]">
+                        يوصى بالاعتماد
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-foreground leading-relaxed">{req.aiSummary}</p>
+                </div>
+              </div>
+
+              {req.aiReasoning && (
+                <>
+                  <button
+                    onClick={() => setShowReasoning((v) => !v)}
+                    className="flex items-center gap-1 text-[11px] text-primary font-medium hover:underline mr-8"
+                  >
+                    {showReasoning ? (
+                      <>
+                        <ChevronUp className="h-3 w-3" /> إخفاء خطوات التحقق
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="h-3 w-3" /> عرض خطوات التحقق ({req.aiReasoning.length})
+                      </>
+                    )}
+                  </button>
+                  {showReasoning && (
+                    <ul className="mr-8 space-y-1 pt-1 animate-fade-up">
+                      {req.aiReasoning.map((step, i) => (
+                        <li key={i} className="text-[11px] text-muted-foreground leading-relaxed">
+                          {step}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </>
+              )}
             </div>
           )}
 
