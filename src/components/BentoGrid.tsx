@@ -1,5 +1,6 @@
 import { Calendar, FileText, BookOpen, Wallet } from "lucide-react";
-import { leaveBalances, myRequests, stats, RequestStatus } from "@/data/hrData";
+import { leaveBalances, myRequests, stats, RequestStatus, employeeAgentActivity } from "@/data/hrData";
+import { AgentActivityFeed } from "./AgentActivityFeed";
 import { cn } from "@/lib/utils";
 
 interface BentoGridProps {
@@ -109,11 +110,16 @@ export function BentoGrid({ onOpenLeave, onOpenDocument }: BentoGridProps) {
           </div>
           <div>
             <p className="text-xs opacity-90 leading-relaxed">
-              ساعدتك بإنجاز <span className="num font-bold">٩</span> طلبات تلقائياً —
-              توفير <span className="num font-bold">٣ ساعات</span> من وقتك.
+              نفّذ الوكيل <span className="num font-bold">٩</span> طلبات تلقائياً —
+              وفّر لك <span className="num font-bold">٣ ساعات</span>.
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Agent activity feed */}
+      <div className="col-span-12">
+        <AgentActivityFeed activities={employeeAgentActivity} />
       </div>
     </div>
   );
