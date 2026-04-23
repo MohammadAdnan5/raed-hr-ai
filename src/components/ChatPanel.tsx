@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, FileText, Calendar, BookOpen, ArrowUp } from "lucide-react";
+import { Sparkles, FileText, Calendar, BookOpen, ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { policySnippets } from "@/data/hrData";
+import { policySnippets, samplePlans, AgentPlan as TPlan } from "@/data/hrData";
+import { AgentPlanCard } from "./AgentPlan";
+import { useToast } from "@/hooks/use-toast";
 
 type MessageRole = "user" | "agent";
 
@@ -12,6 +14,7 @@ interface ChatMessage {
   content: string;
   source?: string;
   actions?: { label: string; onClick: () => void }[];
+  plan?: TPlan;
 }
 
 interface ChatPanelProps {
@@ -31,12 +34,14 @@ export function ChatPanel({ onOpenLeave, onOpenDocument }: ChatPanelProps) {
     {
       id: "welcome",
       role: "agent",
-      content: "أهلاً عبدالله 👋 أنا مساعدك الذكي للموارد البشرية. اسألني عن أي شيء، أو ابدأ بطلب جديد.",
+      content:
+        "أهلاً عبدالله 👋 أنا وكيلك الذكي للموارد البشرية. لا أكتفي بالإجابة — أُخطّط، أتحقق من السياسات، وأنفّذ الإجراءات نيابةً عنك بأمان.",
     },
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -56,7 +61,18 @@ export function ChatPanel({ onOpenLeave, onOpenDocument }: ChatPanelProps) {
     setIsTyping(true);
 
     setTimeout(() => {
-      const reply = generateReply(content, { onOpenLeave, onOpenDocument });
+      const reply = generateReply(content, {
+        onOpenLeave,
+        onOpenDocument,
+        onPlanApprove: (planId) => {
+          toast({
+            title: "نفّذ الوكيل الإجراء",
+            description: "أكملتُ الخطوات المتبقية بأمان وأشعرتُ الأطراف المعنية.",
+          });
+          if (planId === "plan-leave") onOpenLeave();
+          if (planId === "plan-doc") onOpenDocument();
+        },
+      });
       setMessages((m) => [...m, reply]);
       setIsTyping(false);
     }, 900);
@@ -70,10 +86,10 @@ export function ChatPanel({ onOpenLeave, onOpenDocument }: ChatPanelProps) {
           <Sparkles className="h-4 w-4 text-primary-foreground" strokeWidth={2.5} />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-bold">مساعد الموارد البشرية</p>
+          <p className="text-sm font-bold">وكيل الموارد البشرية الذكي</p>
           <p className="text-xs text-muted-foreground flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-success" />
-            متصل ومستعد للمساعدة
+            يخطط · يتحقق · ينفّذ
           </p>
         </div>
       </div>
@@ -81,13 +97,30 @@ export function ChatPanel({ onOpenLeave, onOpenDocument }: ChatPanelProps) {
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-thin px-5 py-6 space-y-4">
         {messages.map((msg) => (
-          <MessageBubble key={msg.id} message={msg} />
+          <MessageBubble
+            key={msg.id}
+            message={msg}
+            onPlanApprove={() => {
+              if (!msg.plan) return;
+              toast({
+                title: "نفّذ الوكيل الإجراء",
+                description: "أكملتُ الخطوات المتبقية بأمان وأشعرتُ الأطراف المعنية.",
+              });
+              if (msg.plan.id === "plan-leave") onOpenLeave();
+              if (msg.plan.id === "plan-doc") onOpenDocument();
+            }}
+            onPlanCancel={() => {
+              setMessages((m) =>
+                m.map((x) => (x.id === msg.id ? { ...x, plan: undefined, content: "أوقفتُ الخطة. أخبرني متى تريد المتابعة." } : x))
+              );
+            }}
+          />
         ))}
         {isTyping && <TypingIndicator />}
 
         {messages.length === 1 && (
           <div className="pt-4 space-y-2 animate-fade-up">
-            <p className="text-xs text-muted-foreground px-1">اقتراحات سريعة</p>
+            <p className="text-xs text-muted-foreground px-1">جرّب طلباً يحتاج تخطيطاً</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {suggestions.map((s, i) => (
                 <button
@@ -130,14 +163,22 @@ export function ChatPanel({ onOpenLeave, onOpenDocument }: ChatPanelProps) {
           </Button>
         </div>
         <p className="mt-2 text-[10px] text-muted-foreground text-center">
-          إجاباتي مستندة على سياسات شركتك المعتمدة
+          الوكيل لا ينفّذ إجراءات حساسة دون موافقتك · مستند على سياسات شركتك
         </p>
       </div>
     </div>
   );
 }
 
-function MessageBubble({ message }: { message: ChatMessage }) {
+function MessageBubble({
+  message,
+  onPlanApprove,
+  onPlanCancel,
+}: {
+  message: ChatMessage;
+  onPlanApprove: () => void;
+  onPlanCancel: () => void;
+}) {
   const isUser = message.role === "user";
   return (
     <div className={cn("flex gap-2.5 animate-fade-up", isUser && "flex-row-reverse")}>
@@ -149,21 +190,28 @@ function MessageBubble({ message }: { message: ChatMessage }) {
       >
         {isUser ? "أ" : <Sparkles className="h-3.5 w-3.5" />}
       </div>
-      <div className={cn("flex flex-col gap-1.5 max-w-[85%]", isUser && "items-end")}>
-        <div
-          className={cn(
-            "rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
-            isUser
-              ? "bg-primary text-primary-foreground rounded-tr-sm"
-              : "bg-secondary text-foreground rounded-tl-sm"
-          )}
-        >
-          {message.content}
-        </div>
+      <div className={cn("flex flex-col gap-1.5 max-w-[85%] min-w-0", isUser && "items-end")}>
+        {message.content && (
+          <div
+            className={cn(
+              "rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+              isUser
+                ? "bg-primary text-primary-foreground rounded-tr-sm"
+                : "bg-secondary text-foreground rounded-tl-sm"
+            )}
+          >
+            {message.content}
+          </div>
+        )}
         {message.source && (
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground px-1">
             <BookOpen className="h-3 w-3" />
             <span>المصدر: {message.source}</span>
+          </div>
+        )}
+        {message.plan && (
+          <div className="w-full">
+            <AgentPlanCard plan={message.plan} onApprove={onPlanApprove} onCancel={onPlanCancel} />
           </div>
         )}
         {message.actions && (
@@ -201,7 +249,11 @@ function TypingIndicator() {
 
 function generateReply(
   query: string,
-  handlers: { onOpenLeave: () => void; onOpenDocument: () => void }
+  handlers: {
+    onOpenLeave: () => void;
+    onOpenDocument: () => void;
+    onPlanApprove: (planId: string) => void;
+  }
 ): ChatMessage {
   const q = query.toLowerCase();
   const id = `a-${Date.now()}`;
@@ -211,20 +263,16 @@ function generateReply(
       id,
       role: "agent",
       content:
-        "تمام! يمكنني مساعدتك بتقديم طلب الإجازة. رصيدك السنوي الحالي: ١٣ يوماً متاحة من أصل ٢١. هل تريد المتابعة الآن؟",
-      actions: [
-        { label: "تقديم طلب إجازة", onClick: handlers.onOpenLeave },
-        { label: "عرض رصيدي", onClick: () => {} },
-      ],
+        "فهمتُ — سأخطّط لطلب الإجازة وأتحقق من كل شيء قبل الإرسال:",
+      plan: samplePlans.leave,
     };
   }
   if (q.includes("خطاب") || q.includes("وثيقة") || q.includes("شهادة") || q.includes("راتب") || q.includes("تعريف")) {
     return {
       id,
       role: "agent",
-      content:
-        "أكيد. يمكنني إصدار خطاب التعريف خلال ساعات قليلة. أحتاج فقط جهة التوجيه (بنك، سفارة، جهة حكومية...).",
-      actions: [{ label: "بدء طلب الوثيقة", onClick: handlers.onOpenDocument }],
+      content: "تمام، سأتولى إصدار الخطاب خطوة بخطوة:",
+      plan: samplePlans.document,
     };
   }
   const policy = policySnippets.find((p) => q.includes("ترحيل") || q.includes("تجربة") || q.includes("سياسة"));
@@ -244,10 +292,10 @@ function generateReply(
     id,
     role: "agent",
     content:
-      "فهمت طلبك. هل تقصد إجراءً معيناً؟ يمكنني المساعدة في الإجازات، الوثائق، الاستفسارات عن السياسات، أو تحديث بياناتك.",
+      "فهمت طلبك. هل تقصد إجراءً معيناً؟ يمكنني التخطيط لإجازة، إصدار وثيقة، أو الإجابة عن سياسة محددة.",
     actions: [
-      { label: "تقديم إجازة", onClick: handlers.onOpenLeave },
-      { label: "طلب وثيقة", onClick: handlers.onOpenDocument },
+      { label: "خطّط لإجازة", onClick: handlers.onOpenLeave },
+      { label: "أصدر وثيقة", onClick: handlers.onOpenDocument },
     ],
   };
 }
