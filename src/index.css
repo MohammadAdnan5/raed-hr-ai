@@ -2,95 +2,138 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* ============================================================
+   Smart HR Assistant — Design System
+   Inspired by Airbnb's warm hospitality identity (Rausch coral)
+   Arabic-first, RTL-native
+   ============================================================ */
+
+@font-face {
+  font-family: "Thmanyah";
+  src: url("/fonts/thmanyahsans-Light.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Thmanyah";
+  src: url("/fonts/thmanyahsans-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Thmanyah";
+  src: url("/fonts/thmanyahsans-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Thmanyah";
+  src: url("/fonts/thmanyahsans-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Thmanyah";
+  src: url("/fonts/thmanyahsans-Black.otf") format("opentype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Surfaces — warm neutral whites (Airbnb-like) */
+    --background: 30 33% 99%;
+    --foreground: 220 13% 13%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 220 13% 13%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 220 13% 13%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Rausch — Airbnb signature coral */
+    --primary: 358 75% 59%;
+    --primary-foreground: 0 0% 100%;
+    --primary-soft: 358 80% 96%;
+    --primary-hover: 358 70% 52%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary warm neutral */
+    --secondary: 30 20% 96%;
+    --secondary-foreground: 220 13% 13%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 30 15% 95%;
+    --muted-foreground: 220 9% 46%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 30 20% 96%;
+    --accent-foreground: 220 13% 13%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --success: 152 60% 38%;
+    --success-foreground: 0 0% 100%;
+    --success-soft: 152 50% 94%;
 
-    --radius: 0.5rem;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --warning-soft: 45 100% 95%;
 
-    --sidebar-background: 0 0% 98%;
+    --info: 210 90% 50%;
+    --info-soft: 210 100% 96%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    --border: 30 13% 91%;
+    --input: 30 13% 91%;
+    --ring: 358 75% 59%;
 
-    --sidebar-primary: 240 5.9% 10%;
+    --radius: 1rem;
 
-    --sidebar-primary-foreground: 0 0% 98%;
+    /* Gradients */
+    --gradient-warm: linear-gradient(135deg, hsl(358 75% 59%) 0%, hsl(12 80% 62%) 100%);
+    --gradient-soft: linear-gradient(180deg, hsl(30 33% 99%) 0%, hsl(30 25% 96%) 100%);
+    --gradient-hero: radial-gradient(ellipse at top right, hsl(358 80% 96%) 0%, hsl(30 33% 99%) 60%);
 
-    --sidebar-accent: 240 4.8% 95.9%;
+    /* Shadows — soft, premium */
+    --shadow-sm: 0 1px 2px 0 hsl(220 13% 13% / 0.04);
+    --shadow-md: 0 2px 8px -1px hsl(220 13% 13% / 0.06), 0 4px 16px -2px hsl(220 13% 13% / 0.04);
+    --shadow-lg: 0 8px 24px -4px hsl(220 13% 13% / 0.08), 0 16px 40px -8px hsl(220 13% 13% / 0.06);
+    --shadow-coral: 0 8px 24px -8px hsl(358 75% 59% / 0.4);
 
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 13% 13%;
+    --sidebar-primary: 358 75% 59%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 30 20% 96%;
+    --sidebar-accent-foreground: 220 13% 13%;
+    --sidebar-border: 30 13% 91%;
+    --sidebar-ring: 358 75% 59%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --background: 220 13% 9%;
+    --foreground: 30 20% 96%;
+    --card: 220 13% 11%;
+    --card-foreground: 30 20% 96%;
+    --popover: 220 13% 11%;
+    --popover-foreground: 30 20% 96%;
+    --primary: 358 75% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 13% 16%;
+    --secondary-foreground: 30 20% 96%;
+    --muted: 220 13% 16%;
+    --muted-foreground: 220 9% 65%;
+    --accent: 220 13% 16%;
+    --accent-foreground: 30 20% 96%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 18%;
+    --input: 220 13% 18%;
+    --ring: 358 75% 59%;
   }
 }
 
@@ -99,7 +142,66 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
-  body {
-    @apply bg-background text-foreground;
+  html {
+    font-family: "Thmanyah", system-ui, -apple-system, sans-serif;
   }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: "Thmanyah", system-ui, -apple-system, sans-serif;
+    font-feature-settings: "kern", "liga";
+  }
+
+  /* RTL-aware focus ring */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Numbers stay LTR even inside RTL paragraphs */
+  .num {
+    direction: ltr;
+    unicode-bidi: embed;
+    display: inline-block;
+  }
+}
+
+@layer components {
+  .bento-card {
+    @apply bg-card border border-border rounded-2xl p-6 transition-all duration-300;
+    box-shadow: var(--shadow-sm);
+  }
+  .bento-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium;
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--border));
+    border-radius: 3px;
+  }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+@keyframes typing {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-4px); opacity: 1; }
 }
