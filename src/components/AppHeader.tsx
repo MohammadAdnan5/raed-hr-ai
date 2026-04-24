@@ -1,6 +1,7 @@
-import { Sparkles, Bell, ChevronDown } from "lucide-react";
+import { Bell, ChevronDown } from "lucide-react";
 import { useRole } from "@/context/RoleContext";
 import { Button } from "@/components/ui/button";
+import logo from "@/assets/logo.png";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,12 +16,10 @@ export function AppHeader() {
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/80 backdrop-blur-md">
       <div className="container flex h-16 items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-warm shadow-coral">
-            <Sparkles className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
-          </div>
+          <img src={logo} alt="رائد" className="h-10 w-10 rounded-xl object-contain" />
           <div className="flex flex-col leading-tight">
-            <span className="text-base font-bold tracking-tight">المساعد الذكي</span>
-            <span className="text-xs text-muted-foreground">الموارد البشرية</span>
+            <span className="text-base font-bold tracking-tight">رائد</span>
+            <span className="text-xs text-muted-foreground">مساعد الموارد البشرية الذكي</span>
           </div>
         </div>
 
