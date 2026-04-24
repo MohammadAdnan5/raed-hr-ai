@@ -48,9 +48,7 @@ export function AppHeader() {
             <span className="absolute top-2 left-2 h-2 w-2 rounded-full bg-primary animate-pulse-soft" />
           </Button>
 
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-sm font-semibold">
-            ع.م
-          </div>
+          <img src={logo} alt="رائد" className="h-9 w-9 rounded-full object-contain bg-secondary p-1" />
         </div>
       </div>
     </header>
