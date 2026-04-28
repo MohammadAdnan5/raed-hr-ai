@@ -20,6 +20,8 @@ interface ChatMessage {
 interface ChatPanelProps {
   onOpenLeave: () => void;
   onOpenDocument: () => void;
+  onOpenPolicies?: () => void;
+  onOpenPayslip?: () => void;
 }
 
 const suggestions = [
@@ -29,7 +31,7 @@ const suggestions = [
   { icon: Sparkles, text: "ما هي مزايا التأمين الصحي؟" },
 ];
 
-export function ChatPanel({ onOpenLeave, onOpenDocument }: ChatPanelProps) {
+export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenPayslip }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
