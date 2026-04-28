@@ -89,13 +89,16 @@ export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenP
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-warm shadow-coral">
           <Sparkles className="h-4 w-4 text-primary-foreground" strokeWidth={2.5} />
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <p className="text-sm font-bold">وكيل الموارد البشرية الذكي</p>
           <p className="text-xs text-muted-foreground flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-success" />
             يخطط · يتحقق · ينفّذ
           </p>
         </div>
+        <span className="chip bg-background/70 border border-border text-[10px] text-muted-foreground shrink-0">
+          نطاق: HR فقط
+        </span>
       </div>
 
       {/* Messages */}
