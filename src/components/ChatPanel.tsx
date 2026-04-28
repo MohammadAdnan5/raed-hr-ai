@@ -66,6 +66,8 @@ export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenP
       const reply = generateReply(content, {
         onOpenLeave,
         onOpenDocument,
+        onOpenPolicies,
+        onOpenPayslip,
         onPlanApprove: (planId) => {
           toast({
             title: "نفّذ الوكيل الإجراء",
