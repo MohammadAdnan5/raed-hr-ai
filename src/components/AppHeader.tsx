@@ -1,7 +1,8 @@
-import { Bell, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useRole } from "@/context/RoleContext";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/raed-wordmark.png";
+import { NotificationsPopover } from "./NotificationsPopover";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,10 +45,7 @@ export function AppHeader() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button variant="ghost" size="icon" className="rounded-full relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-2 left-2 h-2 w-2 rounded-full bg-primary animate-pulse-soft" />
-          </Button>
+          <NotificationsPopover />
 
           <img src={logo} alt="رائد" className="h-9 w-9 rounded-full object-contain bg-secondary p-1" />
         </div>

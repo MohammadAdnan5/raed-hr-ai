@@ -20,6 +20,8 @@ interface ChatMessage {
 interface ChatPanelProps {
   onOpenLeave: () => void;
   onOpenDocument: () => void;
+  onOpenPolicies?: () => void;
+  onOpenPayslip?: () => void;
 }
 
 const suggestions = [
@@ -29,7 +31,7 @@ const suggestions = [
   { icon: Sparkles, text: "ما هي مزايا التأمين الصحي؟" },
 ];
 
-export function ChatPanel({ onOpenLeave, onOpenDocument }: ChatPanelProps) {
+export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenPayslip }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
@@ -64,6 +66,8 @@ export function ChatPanel({ onOpenLeave, onOpenDocument }: ChatPanelProps) {
       const reply = generateReply(content, {
         onOpenLeave,
         onOpenDocument,
+        onOpenPolicies,
+        onOpenPayslip,
         onPlanApprove: (planId) => {
           toast({
             title: "نفّذ الوكيل الإجراء",
@@ -85,13 +89,16 @@ export function ChatPanel({ onOpenLeave, onOpenDocument }: ChatPanelProps) {
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-warm shadow-coral">
           <Sparkles className="h-4 w-4 text-primary-foreground" strokeWidth={2.5} />
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <p className="text-sm font-bold">وكيل الموارد البشرية الذكي</p>
           <p className="text-xs text-muted-foreground flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-success" />
             يخطط · يتحقق · ينفّذ
           </p>
         </div>
+        <span className="chip bg-background/70 border border-border text-[10px] text-muted-foreground shrink-0">
+          نطاق: HR فقط
+        </span>
       </div>
 
       {/* Messages */}
@@ -247,27 +254,64 @@ function TypingIndicator() {
   );
 }
 
+// HR scope guardrail — keywords inside the agent's authority
+const HR_KEYWORDS = [
+  "إجاز","اجاز","رصيد","راتب","كشف","تأمين","تامين","مزايا","سياس","لائح","عقد","شهاد","خطاب","تعريف","وثيق","تأييد","تاييد","عمل","حضور","انصراف","تسجيل","تأخر","مكافأ","بدل","سكن","مواصلات","تأشير","تاشير","تجربة","ترحيل","استقالة","اجتماع","مدير","فريق","موارد","HR","hr",
+];
+// Topics outside the agent's scope (privacy / non-HR)
+const OUT_OF_SCOPE = [
+  "زميل","زملاء","راتب فلان","تقييم فلان","سياسة","رياضة","طقس","أخبار","برمج","كود","طبخ",
+];
+
+function isInScope(q: string) {
+  return HR_KEYWORDS.some((k) => q.includes(k));
+}
+function isPrivacyRisk(q: string) {
+  return /راتب\s+\S+|كم\s+يأخذ|كم\s+راتب\s+(?!ي|ال)/.test(q);
+}
+
 function generateReply(
   query: string,
   handlers: {
     onOpenLeave: () => void;
     onOpenDocument: () => void;
+    onOpenPolicies?: () => void;
+    onOpenPayslip?: () => void;
     onPlanApprove: (planId: string) => void;
   }
 ): ChatMessage {
   const q = query.toLowerCase();
   const id = `a-${Date.now()}`;
 
-  if (q.includes("إجازة") || q.includes("اجازة")) {
+  // 🛡️ Guardrail 1: privacy risk (asking about others' compensation)
+  if (isPrivacyRisk(q)) {
     return {
       id,
       role: "agent",
       content:
-        "فهمتُ — سأخطّط لطلب الإجازة وأتحقق من كل شيء قبل الإرسال:",
+        "لا أستطيع مشاركة معلومات راتب موظف آخر — هذه بيانات خاصة محمية بسياسة السرية. يمكنني مساعدتك في كل ما يخصك أنت.",
+      source: "ميثاق سلوك العمل — السرية",
+    };
+  }
+
+  if (q.includes("إجازة") || q.includes("اجازة")) {
+    return {
+      id,
+      role: "agent",
+      content: "فهمتُ — سأخطّط لطلب الإجازة وأتحقق من كل شيء قبل الإرسال:",
       plan: samplePlans.leave,
     };
   }
-  if (q.includes("خطاب") || q.includes("وثيقة") || q.includes("شهادة") || q.includes("راتب") || q.includes("تعريف")) {
+  if (q.includes("كشف") || q.includes("راتبي") || q.includes("معاش")) {
+    return {
+      id,
+      role: "agent",
+      content: "هذا كشف راتبك لآخر شهر — يمكنك أيضاً تنزيل الأشهر السابقة.",
+      source: "نظام الرواتب الداخلي",
+      actions: handlers.onOpenPayslip ? [{ label: "افتح كشف الراتب", onClick: handlers.onOpenPayslip }] : undefined,
+    };
+  }
+  if (q.includes("خطاب") || q.includes("وثيقة") || q.includes("شهادة") || q.includes("تعريف") || q.includes("تأييد") || q.includes("تاييد")) {
     return {
       id,
       role: "agent",
@@ -275,24 +319,45 @@ function generateReply(
       plan: samplePlans.document,
     };
   }
-  const policy = policySnippets.find((p) => q.includes("ترحيل") || q.includes("تجربة") || q.includes("سياسة"));
+  const policy = policySnippets.find((p) => q.includes("ترحيل") || q.includes("تجربة") || q.includes("سياسة") || q.includes("لائحة"));
   if (policy) {
-    return { id, role: "agent", content: policy.a, source: policy.source };
+    return {
+      id,
+      role: "agent",
+      content: policy.a,
+      source: policy.source,
+      actions: handlers.onOpenPolicies ? [{ label: "تصفح السياسات الكاملة", onClick: handlers.onOpenPolicies }] : undefined,
+    };
   }
-  if (q.includes("تأمين") || q.includes("مزايا")) {
+  if (q.includes("تأمين") || q.includes("تامين") || q.includes("مزايا")) {
     return {
       id,
       role: "agent",
       content:
         "التأمين الصحي يغطيك أنت وأسرتك (الزوج/ة وحتى ٣ أبناء) في الفئة (أ) لدى شبكة بوبا، ويشمل العيادات الخارجية والتنويم وطب الأسنان الأساسي.",
       source: "دليل المزايا — قسم التأمين",
+      actions: handlers.onOpenPolicies ? [{ label: "افتح دليل المزايا", onClick: handlers.onOpenPolicies }] : undefined,
     };
   }
+
+  // 🛡️ Guardrail 2: out-of-scope fallback
+  if (!isInScope(q)) {
+    return {
+      id,
+      role: "agent",
+      content:
+        "هذا السؤال خارج نطاقي — أنا متخصص في شؤون الموارد البشرية فقط (إجازات، رواتب، وثائق، سياسات، مزايا). جرّب سؤالاً في هذه المواضيع وسأسعدك بالإجابة.",
+      actions: [
+        { label: "تصفح السياسات", onClick: handlers.onOpenPolicies ?? (() => {}) },
+        { label: "خطّط لإجازة", onClick: handlers.onOpenLeave },
+      ],
+    };
+  }
+
   return {
     id,
     role: "agent",
-    content:
-      "فهمت طلبك. هل تقصد إجراءً معيناً؟ يمكنني التخطيط لإجازة، إصدار وثيقة، أو الإجابة عن سياسة محددة.",
+    content: "فهمت طلبك. هل تقصد إجراءً معيناً؟ يمكنني التخطيط لإجازة، إصدار وثيقة، فتح كشف الراتب، أو الإجابة عن سياسة محددة.",
     actions: [
       { label: "خطّط لإجازة", onClick: handlers.onOpenLeave },
       { label: "أصدر وثيقة", onClick: handlers.onOpenDocument },

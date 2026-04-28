@@ -1,14 +1,19 @@
-import { Calendar, FileText, BookOpen, Wallet } from "lucide-react";
-import { leaveBalances, myRequests, stats, RequestStatus, employeeAgentActivity } from "@/data/hrData";
+import { Calendar, FileText, BookOpen, Wallet, Inbox } from "lucide-react";
+import { leaveBalances, myRequests, stats, RequestStatus, employeeAgentActivity, TrackedDocument } from "@/data/hrData";
 import { AgentActivityFeed } from "./AgentActivityFeed";
 import { cn } from "@/lib/utils";
 
 interface BentoGridProps {
   onOpenLeave: () => void;
   onOpenDocument: () => void;
+  onOpenPolicies: () => void;
+  onOpenPayslip: () => void;
+  onOpenTracker: () => void;
+  trackedDocs: TrackedDocument[];
 }
 
-export function BentoGrid({ onOpenLeave, onOpenDocument }: BentoGridProps) {
+export function BentoGrid({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenPayslip, onOpenTracker, trackedDocs }: BentoGridProps) {
+  const readyCount = trackedDocs.filter((d) => d.status === "ready").length;
   return (
     <div className="grid grid-cols-12 gap-4 auto-rows-[minmax(0,auto)]">
       {/* Welcome — large */}
@@ -71,23 +76,30 @@ export function BentoGrid({ onOpenLeave, onOpenDocument }: BentoGridProps) {
         onClick={onOpenDocument}
       />
       <ActionCard
+        icon={Inbox}
+        title="وثائقي"
+        subtitle={readyCount > 0 ? `${readyCount} جاهزة للتنزيل` : "تتبّع وحمّل"}
+        onClick={onOpenTracker}
+        badge={readyCount > 0}
+      />
+      <ActionCard
         icon={BookOpen}
         title="السياسات"
         subtitle="إجابات فورية موثقة"
-        onClick={() => {}}
+        onClick={onOpenPolicies}
       />
       <ActionCard
         icon={Wallet}
         title="كشف الراتب"
         subtitle="آخر شهر متاح"
-        onClick={() => {}}
+        onClick={onOpenPayslip}
       />
 
       {/* Requests timeline */}
       <div className="col-span-12 lg:col-span-9 bento-card">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-bold">طلباتي الأخيرة</h3>
-          <button className="text-xs text-primary font-medium hover:underline">
+          <button onClick={onOpenTracker} className="text-xs text-primary font-medium hover:underline">
             عرض الكل
           </button>
         </div>
@@ -139,17 +151,22 @@ function ActionCard({
   title,
   subtitle,
   onClick,
+  badge,
 }: {
   icon: any;
   title: string;
   subtitle: string;
   onClick: () => void;
+  badge?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
-      className="col-span-6 sm:col-span-4 lg:col-span-2 bento-card text-right hover:border-primary/40 group flex flex-col items-start gap-3"
+      className="col-span-6 sm:col-span-3 lg:col-span-3 bento-card text-right hover:border-primary/40 group flex flex-col items-start gap-3 relative"
     >
+      {badge && (
+        <span className="absolute top-3 left-3 h-2 w-2 rounded-full bg-primary animate-pulse-soft" />
+      )}
       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary group-hover:bg-primary-soft transition-colors">
         <Icon className="h-5 w-5 text-foreground group-hover:text-primary transition-colors" />
       </div>
