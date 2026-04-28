@@ -15,6 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 interface DocumentDialogProps {
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  onSubmitted?: (doc: import("@/data/hrData").TrackedDocument) => void;
+  onOpenTracker?: () => void;
 }
 
 const docTypes = [
@@ -24,7 +26,7 @@ const docTypes = [
   { id: "noobj", label: "خطاب عدم ممانعة", time: "خلال ٢٤ ساعة" },
 ];
 
-export function DocumentDialog({ open, onOpenChange }: DocumentDialogProps) {
+export function DocumentDialog({ open, onOpenChange, onSubmitted, onOpenTracker }: DocumentDialogProps) {
   const [step, setStep] = useState(1);
   const [docType, setDocType] = useState("salary");
   const [recipient, setRecipient] = useState("");
@@ -43,9 +45,25 @@ export function DocumentDialog({ open, onOpenChange }: DocumentDialogProps) {
 
   const submit = () => {
     setStep(3);
+    const selected = docTypes.find((d) => d.id === docType)!;
+    const newDoc: import("@/data/hrData").TrackedDocument = {
+      id: `DOC-${Math.floor(2050 + Math.random() * 50)}`,
+      type: selected.label,
+      recipient: recipient.trim() || undefined,
+      requestedAt: "الآن",
+      status: "processing",
+      steps: [
+        { label: "استلام الطلب", done: true, time: "الآن" },
+        { label: "التحقق من البيانات", done: false },
+        { label: "إنشاء المسودة", done: false },
+        { label: "التوقيع الرقمي", done: false },
+        { label: "جاهز للتنزيل", done: false },
+      ],
+    };
+    onSubmitted?.(newDoc);
     toast({
-      title: "تم استلام طلب الوثيقة",
-      description: "سنخطرك فور جهوزيتها.",
+      title: "بدأ الوكيل التنفيذ",
+      description: "يمكنك متابعة حالة الوثيقة من \"وثائقي\".",
     });
   };
 
