@@ -4,6 +4,7 @@ import { pendingApprovals, HRRequest, managerAgentActivity } from "@/data/hrData
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { AgentActivityFeed } from "./AgentActivityFeed";
+import { AutoApprovalRules } from "./AutoApprovalRules";
 import { cn } from "@/lib/utils";
 
 const typeIcon = (type: string) => {
@@ -90,6 +91,9 @@ export function ManagerView() {
           </div>
         )}
       </div>
+
+      {/* Auto-approval rules — governance layer */}
+      <AutoApprovalRules />
 
       {/* Agent activity for manager */}
       <AgentActivityFeed activities={managerAgentActivity} />
