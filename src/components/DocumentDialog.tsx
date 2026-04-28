@@ -173,12 +173,21 @@ export function DocumentDialog({ open, onOpenChange, onSubmitted, onOpenTracker 
                 ستجد الوثيقة في صندوق طلباتك {selectedDoc?.time}.
               </p>
             </div>
-            <Button
-              onClick={() => handleClose(false)}
-              className="w-full bg-primary hover:bg-primary-hover rounded-xl h-11"
-            >
-              تم
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => handleClose(false)}
+                className="flex-1 rounded-xl h-11"
+              >
+                تم
+              </Button>
+              <Button
+                onClick={() => { handleClose(false); onOpenTracker?.(); }}
+                className="flex-1 bg-primary hover:bg-primary-hover rounded-xl h-11"
+              >
+                تتبّع الطلب
+              </Button>
+            </div>
           </div>
         )}
       </DialogContent>
