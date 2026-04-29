@@ -388,6 +388,157 @@ export interface TrackedDocument {
   downloadUrl?: string; // mock — generated on the fly
 }
 
+// ===== Manager: ROI tracker =====
+export interface ROIMetric {
+  label: string;
+  value: string;
+  unit: string;
+  delta: string;
+  positive: boolean;
+}
+export const roiSummary = {
+  hoursSavedWeek: 18,
+  riyalEquivalent: 5400,
+  autoResolvedRate: 72,
+  avgResponseMin: 4,
+  trend: [12, 14, 11, 16, 18, 15, 18], // last 7 days
+};
+export const roiBreakdown: ROIMetric[] = [
+  { label: "ساعات موفّرة", value: "١٨", unit: "ساعة/أسبوع", delta: "+٢٢٪", positive: true },
+  { label: "ما يعادل", value: "٥,٤٠٠", unit: "ريال", delta: "+١,٢٠٠", positive: true },
+  { label: "حُلّ ذاتياً", value: "٧٢٪", unit: "من الطلبات", delta: "+٨٪", positive: true },
+  { label: "متوسط الرد", value: "٤", unit: "ثوانٍ", delta: "−١.٢ث", positive: true },
+];
+
+// ===== Manager: Sentiment Radar =====
+export interface SentimentSlice {
+  team: string;
+  mood: number; // 0..100
+  stress: number; // 0..100
+  signals: string[];
+}
+export const sentimentRadar: SentimentSlice[] = [
+  { team: "المبيعات", mood: 58, stress: 78, signals: ["زيادة في كلمات الإرهاق", "طلبات إجازات قصيرة متكررة"] },
+  { team: "الهندسة", mood: 74, stress: 52, signals: ["نبرة محايدة", "نشاط طبيعي"] },
+  { team: "التسويق", mood: 81, stress: 38, signals: ["نبرة إيجابية", "احتفاء بإنجاز إطلاق"] },
+  { team: "الدعم", mood: 62, stress: 70, signals: ["تأخر في الردود", "زيادة الطلبات بعد ساعات العمل"] },
+];
+export const sentimentOverall = { mood: 69, stress: 60, weekDelta: -4 };
+
+// ===== Manager: Smart Escalation (Red Flags) =====
+export interface RedFlag {
+  id: string;
+  severity: "high" | "critical";
+  category: "استقالة" | "شكوى" | "تظلّم" | "صحة نفسية";
+  who: string;
+  team: string;
+  summary: string;
+  detected: string;
+  suggestedAction: string;
+}
+export const redFlags: RedFlag[] = [
+  {
+    id: "rf-1",
+    severity: "critical",
+    category: "استقالة",
+    who: "سارة الحربي",
+    team: "المبيعات",
+    summary: "نية انفصال محتملة — أشارت في حوار خاص إلى البحث عن فرص أخرى وطلبت شهادة خبرة.",
+    detected: "قبل ٣٥ دقيقة",
+    suggestedAction: "اجتماع ١:١ خلال ٤٨ ساعة",
+  },
+  {
+    id: "rf-2",
+    severity: "high",
+    category: "شكوى",
+    who: "موظف من الدعم",
+    team: "الدعم",
+    summary: "شكوى عبر القناة المجهولة حول توزيع المناوبات — تكررت من ٣ موظفين هذا الأسبوع.",
+    detected: "قبل ساعتين",
+    suggestedAction: "مراجعة جدول المناوبات + جلسة مفتوحة",
+  },
+  {
+    id: "rf-3",
+    severity: "high",
+    category: "صحة نفسية",
+    who: "خالد المطيري",
+    team: "الهندسة",
+    summary: "ساعات عمل تتجاوز ١١ ساعة/يوم لمدة أسبوعين، مع رفض إجازة مقترحة من الوكيل.",
+    detected: "اليوم",
+    suggestedAction: "فرض إجازة استرداد + إعادة توزيع المهام",
+  },
+];
+
+// ===== Employee: Proactive Perks =====
+export interface UnusedPerk {
+  id: string;
+  title: string;
+  detail: string;
+  cta: string;
+  icon: "training" | "wellness" | "leave" | "insurance";
+  expiresIn?: string;
+}
+export const unusedPerks: UnusedPerk[] = [
+  {
+    id: "perk-1",
+    title: "ميزانية التدريب لم تُستخدم",
+    detail: "لديك ٤,٠٠٠ ريال في برنامج التطوير المهني — متاحة حتى نهاية السنة المالية.",
+    cta: "اقترح لي دورات",
+    icon: "training",
+    expiresIn: "ينتهي خلال ٦٢ يوم",
+  },
+  {
+    id: "perk-2",
+    title: "فحص طبي شامل مجاني",
+    detail: "تأمينك يشمل فحصاً سنوياً مجانياً لم تستخدمه منذ ١٤ شهراً.",
+    cta: "احجز موعد",
+    icon: "wellness",
+  },
+  {
+    id: "perk-3",
+    title: "٣ أيام إجازة قد تسقط",
+    detail: "تنتهي صلاحيتها نهاية ديسمبر — اقترحتُ تواريخ مناسبة لجدولك.",
+    cta: "شاهد التواريخ المقترحة",
+    icon: "leave",
+    expiresIn: "تسقط نهاية ديسمبر",
+  },
+];
+
+// ===== Employee: Onboarding Buddy =====
+export interface OnboardingTask {
+  id: string;
+  day: number;
+  title: string;
+  description: string;
+  done: boolean;
+  category: "policy" | "social" | "setup" | "training";
+}
+export const onboardingProgress = { day: 7, totalDays: 90, completed: 5, total: 14 };
+export const onboardingTasks: OnboardingTask[] = [
+  { id: "ob-1", day: 1, title: "اقرأ ميثاق سلوك العمل", description: "٣ دقائق فقط — الأساسيات التي تحفظ بيئة آمنة للجميع.", done: true, category: "policy" },
+  { id: "ob-2", day: 1, title: "تعرّف على مزايا التأمين", description: "ما الذي يغطيه تأمينك الصحي ومتى تستخدمه.", done: true, category: "policy" },
+  { id: "ob-3", day: 2, title: "اضبط بياناتك المصرفية", description: "حتى يصلك أول راتب في موعده.", done: true, category: "setup" },
+  { id: "ob-4", day: 3, title: "قابل فريقك افتراضياً", description: "جدولتُ لك مكالمة قصيرة مع كل عضو.", done: true, category: "social" },
+  { id: "ob-5", day: 5, title: "أكمل تدريب الأمن السيبراني", description: "إلزامي خلال أول أسبوعين.", done: true, category: "training" },
+  { id: "ob-6", day: 7, title: "اجتماع تقييم الانطباع الأول", description: "اليوم ٢ م مع مديرك المباشر.", done: false, category: "social" },
+  { id: "ob-7", day: 14, title: "اختر هدفاً لربع السنة", description: "سنناقشه في تقييم نهاية فترة التجربة.", done: false, category: "training" },
+  { id: "ob-8", day: 30, title: "تقييم نهاية الشهر الأول", description: "جلسة قصيرة مع مديرك ومع HR.", done: false, category: "policy" },
+];
+
+// ===== Employee: What-If Simulator scenarios =====
+export interface SimScenario {
+  id: string;
+  question: string;
+  result: { label: string; value: string; tone: "info" | "warn" | "ok" }[];
+  policyRefs: string[];
+}
+export const whatIfPresets = [
+  "ماذا لو أخذتُ ٥ أيام إجازة بدون راتب؟",
+  "ماذا لو عملتُ ٣ أيام عن بُعد الأسبوع القادم؟",
+  "ماذا لو استقلتُ نهاية الشهر؟",
+  "ماذا لو رحّلتُ ٧ أيام إجازة للسنة القادمة؟",
+];
+
 export const initialTrackedDocs: TrackedDocument[] = [
   {
     id: "DOC-2041",

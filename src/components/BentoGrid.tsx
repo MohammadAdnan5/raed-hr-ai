@@ -1,6 +1,7 @@
-import { Calendar, FileText, BookOpen, Wallet, Inbox } from "lucide-react";
+import { Calendar, FileText, BookOpen, Wallet, Inbox, FlaskConical } from "lucide-react";
 import { leaveBalances, myRequests, stats, RequestStatus, employeeAgentActivity, TrackedDocument } from "@/data/hrData";
 import { AgentActivityFeed } from "./AgentActivityFeed";
+import { ProactivePerks } from "./ProactivePerks";
 import { cn } from "@/lib/utils";
 
 interface BentoGridProps {
@@ -9,10 +10,11 @@ interface BentoGridProps {
   onOpenPolicies: () => void;
   onOpenPayslip: () => void;
   onOpenTracker: () => void;
+  onOpenSimulator: () => void;
   trackedDocs: TrackedDocument[];
 }
 
-export function BentoGrid({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenPayslip, onOpenTracker, trackedDocs }: BentoGridProps) {
+export function BentoGrid({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenPayslip, onOpenTracker, onOpenSimulator, trackedDocs }: BentoGridProps) {
   const readyCount = trackedDocs.filter((d) => d.status === "ready").length;
   return (
     <div className="grid grid-cols-12 gap-4 auto-rows-[minmax(0,auto)]">
@@ -94,6 +96,17 @@ export function BentoGrid({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenP
         subtitle="آخر شهر متاح"
         onClick={onOpenPayslip}
       />
+      <ActionCard
+        icon={FlaskConical}
+        title="محاكي القرارات"
+        subtitle="جرّب قبل أن تقرر"
+        onClick={onOpenSimulator}
+      />
+
+      {/* Proactive Perks — surfaces unused benefits */}
+      <div className="col-span-12">
+        <ProactivePerks />
+      </div>
 
       {/* Requests timeline */}
       <div className="col-span-12 lg:col-span-9 bento-card">
