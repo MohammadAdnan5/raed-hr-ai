@@ -22,7 +22,8 @@ interface Props {
 }
 
 export function OnboardingBuddy({ enabled, onToggle }: Props) {
-  const [open, setOpen] = useState(true);
+  // Collapsed by default to reduce cognitive overload on first load
+  const [open, setOpen] = useState(false);
   if (!enabled) return null;
 
   const pct = Math.round((onboardingProgress.completed / onboardingProgress.total) * 100);

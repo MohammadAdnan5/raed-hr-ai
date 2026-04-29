@@ -6,7 +6,8 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
 export function RedFlagsAlert() {
-  const [open, setOpen] = useState(true);
+  // Collapsed by default — surface count, hide details until manager opts in
+  const [open, setOpen] = useState(false);
   const [items] = useState(redFlags);
   const { toast } = useToast();
 
