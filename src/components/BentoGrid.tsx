@@ -71,37 +71,46 @@ export function BentoGrid({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenP
       </button>
 
       {/* Quick actions row */}
-      <ActionCard
-        icon={FileText}
-        title="طلب وثيقة"
-        subtitle="تعريف، شهادة، تأييد"
-        onClick={onOpenDocument}
-      />
-      <ActionCard
-        icon={Inbox}
-        title="وثائقي"
-        subtitle={readyCount > 0 ? `${readyCount} جاهزة للتنزيل` : "تتبّع وحمّل"}
-        onClick={onOpenTracker}
-        badge={readyCount > 0}
-      />
-      <ActionCard
-        icon={BookOpen}
-        title="السياسات"
-        subtitle="إجابات فورية موثقة"
-        onClick={onOpenPolicies}
-      />
-      <ActionCard
-        icon={Wallet}
-        title="كشف الراتب"
-        subtitle="آخر شهر متاح"
-        onClick={onOpenPayslip}
-      />
-      <ActionCard
-        icon={FlaskConical}
-        title="محاكي القرارات"
-        subtitle="جرّب قبل أن تقرر"
-        onClick={onOpenSimulator}
-      />
+      {/* Quick Access — unified, balanced grid */}
+      <section className="col-span-12">
+        <div className="flex items-center justify-between mb-3 px-1">
+          <h3 className="text-sm font-bold text-foreground">وصول سريع</h3>
+          <span className="text-[11px] text-muted-foreground">٥ خدمات أساسية</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <ActionCard
+            icon={FileText}
+            title="طلب وثيقة"
+            subtitle="تعريف، شهادة، تأييد"
+            onClick={onOpenDocument}
+          />
+          <ActionCard
+            icon={Inbox}
+            title="وثائقي"
+            subtitle={readyCount > 0 ? `${readyCount} جاهزة للتنزيل` : "تتبّع وحمّل"}
+            onClick={onOpenTracker}
+            badge={readyCount > 0}
+          />
+          <ActionCard
+            icon={BookOpen}
+            title="السياسات"
+            subtitle="إجابات فورية موثقة"
+            onClick={onOpenPolicies}
+          />
+          <ActionCard
+            icon={Wallet}
+            title="كشف الراتب"
+            subtitle="آخر شهر متاح"
+            onClick={onOpenPayslip}
+          />
+          <ActionCard
+            icon={FlaskConical}
+            title="محاكي القرارات"
+            subtitle="جرّب قبل أن تقرر"
+            onClick={onOpenSimulator}
+          />
+        </div>
+      </section>
 
       {/* Proactive Perks — surfaces unused benefits */}
       <div className="col-span-12">
