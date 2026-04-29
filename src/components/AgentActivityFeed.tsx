@@ -25,7 +25,7 @@ interface Props {
 
 export function AgentActivityFeed({ activities, title = "ماذا فعل وكيلك اليوم", className }: Props) {
   return (
-    <div className={`bento-card ${className ?? ""}`}>
+    <div dir="rtl" className={`bento-card text-right ${className ?? ""}`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-warm shadow-coral">
@@ -39,7 +39,7 @@ export function AgentActivityFeed({ activities, title = "ماذا فعل وكي�
       </div>
 
       <ol className="relative space-y-4">
-        {/* Timeline rail */}
+        {/* Timeline rail — anchored to RTL right edge, aligned to icon center (24px / 2) */}
         <div className="absolute right-[11px] top-1 bottom-1 w-px bg-border" aria-hidden />
 
         {activities.map((a) => {
@@ -50,11 +50,11 @@ export function AgentActivityFeed({ activities, title = "ماذا فعل وكي�
                 <Icon className="h-3 w-3 text-primary" strokeWidth={2.5} />
               </div>
               <div className="flex-1 min-w-0 -mt-0.5">
-                <div className="flex items-center justify-between gap-2 mb-0.5">
-                  <p className="text-sm font-semibold leading-tight">{a.title}</p>
-                  <span className="text-[10px] text-muted-foreground shrink-0">{a.time}</span>
+                <div className="flex items-start justify-between gap-3 mb-0.5">
+                  <p className="text-sm font-semibold leading-tight text-right flex-1 min-w-0">{a.title}</p>
+                  <span className="text-[10px] text-muted-foreground shrink-0 num" dir="ltr">{a.time}</span>
                 </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">{a.detail}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed text-right">{a.detail}</p>
                 <span className="inline-block mt-1.5 text-[10px] font-medium text-primary">
                   {labelMap[a.type]}
                 </span>
