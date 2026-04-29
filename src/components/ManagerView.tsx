@@ -70,8 +70,8 @@ export function ManagerView() {
       </div>
 
       {/* Tabbed shell — keeps surface clean */}
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid grid-cols-3 w-full bg-secondary/60 rounded-xl p-1 h-auto">
+      <Tabs defaultValue="overview" dir="rtl" className="space-y-4">
+        <TabsList className="grid grid-cols-3 w-full bg-secondary/60 rounded-xl p-1 h-auto gap-1">
           <TabsTrigger value="overview" className="rounded-lg gap-1.5 text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm">
             <LayoutDashboard className="h-3.5 w-3.5" /> نظرة عامة
           </TabsTrigger>
