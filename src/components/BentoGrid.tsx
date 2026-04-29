@@ -184,7 +184,7 @@ function ActionCard({
   return (
     <button
       onClick={onClick}
-      className="col-span-6 sm:col-span-3 lg:col-span-3 bento-card text-right hover:border-primary/40 group flex flex-col items-start gap-3 relative"
+      className="bento-card p-4 text-right hover:border-primary/40 group flex flex-col items-start gap-3 relative h-full"
     >
       {badge && (
         <span className="absolute top-3 left-3 h-2 w-2 rounded-full bg-primary animate-pulse-soft" />
