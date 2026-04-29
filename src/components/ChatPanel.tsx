@@ -146,9 +146,31 @@ export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenP
         )}
       </div>
 
-      {/* Input */}
+      {/* Input — frictionless voice & chat */}
       <div className="border-t border-border bg-background p-3">
         <div className="flex items-end gap-2 rounded-2xl border border-border bg-secondary/40 px-3 py-2 transition-colors focus-within:border-primary focus-within:bg-background">
+          <button
+            onClick={() => {
+              setListening((v) => !v);
+              if (!listening) {
+                toast({ title: "🎙️ ابدأ التحدث", description: "أستمع إليك الآن (تجريبي)..." });
+                setTimeout(() => {
+                  setListening(false);
+                  setInput("أحتاج خطاب تعريف بالراتب موجه للبنك الأهلي");
+                  toast({ title: "تم التقاط طلبك", description: "راجعه ثم أرسله." });
+                }, 1800);
+              }
+            }}
+            aria-label="إدخال صوتي"
+            className={cn(
+              "h-9 w-9 shrink-0 rounded-xl flex items-center justify-center transition-all",
+              listening
+                ? "bg-destructive text-destructive-foreground animate-pulse-soft"
+                : "bg-card border border-border hover:border-primary/40 hover:text-primary text-muted-foreground"
+            )}
+          >
+            <Mic className="h-4 w-4" />
+          </button>
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -159,7 +181,7 @@ export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenP
               }
             }}
             rows={1}
-            placeholder="اكتب سؤالك أو طلبك..."
+            placeholder="تحدث أو اكتب طلبك العفوي هنا..."
             className="flex-1 resize-none bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none py-2 max-h-32"
           />
           <Button
@@ -171,6 +193,14 @@ export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenP
             <ArrowUp className="h-4 w-4" />
           </Button>
         </div>
+        {onOpenSimulator && (
+          <button
+            onClick={onOpenSimulator}
+            className="mt-2 mx-auto flex items-center gap-1.5 text-[11px] text-primary font-medium hover:underline"
+          >
+            <FlaskConical className="h-3 w-3" /> جرّب محاكي القرارات
+          </button>
+        )}
         <p className="mt-2 text-[10px] text-muted-foreground text-center">
           الوكيل لا ينفّذ إجراءات حساسة دون موافقتك · مستند على سياسات شركتك
         </p>
