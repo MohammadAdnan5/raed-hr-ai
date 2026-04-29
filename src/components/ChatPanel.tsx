@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Sparkles, FileText, Calendar, BookOpen, ArrowUp } from "lucide-react";
+import { Sparkles, FileText, Calendar, BookOpen, ArrowUp, Mic, FlaskConical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { policySnippets, samplePlans, AgentPlan as TPlan } from "@/data/hrData";
@@ -22,6 +22,7 @@ interface ChatPanelProps {
   onOpenDocument: () => void;
   onOpenPolicies?: () => void;
   onOpenPayslip?: () => void;
+  onOpenSimulator?: () => void;
 }
 
 const suggestions = [
@@ -31,7 +32,8 @@ const suggestions = [
   { icon: Sparkles, text: "ما هي مزايا التأمين الصحي؟" },
 ];
 
-export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenPayslip }: ChatPanelProps) {
+export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenPayslip, onOpenSimulator }: ChatPanelProps) {
+  const [listening, setListening] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
