@@ -1,10 +1,15 @@
 import { useState } from "react";
-import { Check, X, Calendar, FileText, Home, Clock, Sparkles, ChevronDown, ChevronUp, Zap } from "lucide-react";
+import { Check, X, Calendar, FileText, Home, Clock, Sparkles, Zap, LayoutDashboard, BarChart3, Shield } from "lucide-react";
 import { pendingApprovals, HRRequest, managerAgentActivity } from "@/data/hrData";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { AgentActivityFeed } from "./AgentActivityFeed";
 import { AutoApprovalRules } from "./AutoApprovalRules";
+import { ROITracker } from "./ROITracker";
+import { SentimentRadar } from "./SentimentRadar";
+import { RedFlagsAlert } from "./RedFlagsAlert";
+import { ExplainAIPopover } from "./ExplainAIPopover";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 const typeIcon = (type: string) => {
@@ -37,7 +42,10 @@ export function ManagerView() {
 
   return (
     <div className="space-y-4">
-      {/* Manager hero */}
+      {/* 🚨 Always-on top: Red Flags */}
+      <RedFlagsAlert />
+
+      {/* Hero */}
       <div className="bento-card bg-gradient-hero">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex-1 min-w-[240px]">
@@ -61,48 +69,68 @@ export function ManagerView() {
         </div>
       </div>
 
-      {/* Pending list */}
-      <div className="bento-card p-0 overflow-hidden">
-        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-          <h3 className="text-base font-bold">الموافقات المعلقة</h3>
-          <span className="chip bg-warning-soft text-warning">
-            <span className="num">{requests.length}</span> طلب
-          </span>
-        </div>
+      {/* Tabbed shell — keeps surface clean */}
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList className="grid grid-cols-3 w-full bg-secondary/60 rounded-xl p-1 h-auto">
+          <TabsTrigger value="overview" className="rounded-lg gap-1.5 text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm">
+            <LayoutDashboard className="h-3.5 w-3.5" /> نظرة عامة
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="rounded-lg gap-1.5 text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm">
+            <BarChart3 className="h-3.5 w-3.5" /> تحليلات وأثر
+          </TabsTrigger>
+          <TabsTrigger value="governance" className="rounded-lg gap-1.5 text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm">
+            <Shield className="h-3.5 w-3.5" /> الحوكمة
+          </TabsTrigger>
+        </TabsList>
 
-        {requests.length === 0 ? (
-          <div className="p-12 text-center space-y-3">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success-soft">
-              <Check className="h-7 w-7 text-success" strokeWidth={3} />
+        {/* OVERVIEW: pending list + agent activity */}
+        <TabsContent value="overview" className="space-y-4 m-0">
+          <div className="bento-card p-0 overflow-hidden">
+            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+              <h3 className="text-base font-bold">الموافقات المعلقة</h3>
+              <span className="chip bg-warning-soft text-warning">
+                <span className="num">{requests.length}</span> طلب
+              </span>
             </div>
-            <p className="text-sm font-semibold">أنجزتَ كل شيء!</p>
-            <p className="text-xs text-muted-foreground">لا توجد طلبات معلقة حالياً.</p>
+            {requests.length === 0 ? (
+              <div className="p-12 text-center space-y-3">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success-soft">
+                  <Check className="h-7 w-7 text-success" strokeWidth={3} />
+                </div>
+                <p className="text-sm font-semibold">أنجزتَ كل شيء!</p>
+                <p className="text-xs text-muted-foreground">لا توجد طلبات معلقة حالياً.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {requests.map((req) => (
+                  <ApprovalCard
+                    key={req.id}
+                    req={req}
+                    onApprove={() => handleAction(req.id, "approve")}
+                    onReject={() => handleAction(req.id, "reject")}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="divide-y divide-border">
-            {requests.map((req) => (
-              <ApprovalCard
-                key={req.id}
-                req={req}
-                onApprove={() => handleAction(req.id, "approve")}
-                onReject={() => handleAction(req.id, "reject")}
-              />
-            ))}
+          <AgentActivityFeed activities={managerAgentActivity} />
+        </TabsContent>
+
+        {/* ANALYTICS: ROI + Sentiment */}
+        <TabsContent value="analytics" className="space-y-4 m-0">
+          <ROITracker />
+          <SentimentRadar />
+          <div className="grid grid-cols-2 gap-3">
+            <InsightCard label="موافقات هذا الأسبوع" value="١٢" delta="+٣" />
+            <InsightCard label="طلبات الفريق" value="٢٤" delta="+٦" />
           </div>
-        )}
-      </div>
+        </TabsContent>
 
-      {/* Auto-approval rules — governance layer */}
-      <AutoApprovalRules />
-
-      {/* Agent activity for manager */}
-      <AgentActivityFeed activities={managerAgentActivity} />
-
-      {/* Insights */}
-      <div className="grid grid-cols-2 gap-3">
-        <InsightCard label="موافقات هذا الأسبوع" value="١٢" delta="+٣" />
-        <InsightCard label="طلبات الفريق" value="٢٤" delta="+٦" />
-      </div>
+        {/* GOVERNANCE: rules */}
+        <TabsContent value="governance" className="space-y-4 m-0">
+          <AutoApprovalRules />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
@@ -117,7 +145,6 @@ function ApprovalCard({
   onReject: () => void;
 }) {
   const Icon = typeIcon(req.type);
-  const [showReasoning, setShowReasoning] = useState(false);
 
   return (
     <div className="p-5 hover:bg-secondary/30 transition-colors animate-fade-up">
@@ -145,7 +172,6 @@ function ApprovalCard({
             </div>
           )}
 
-          {/* AI Summary & Recommendation */}
           {req.aiSummary && (
             <div className="mt-3 rounded-xl border border-primary/20 bg-primary-soft/40 p-3 space-y-2">
               <div className="flex items-start gap-2">
@@ -153,7 +179,7 @@ function ApprovalCard({
                   <Sparkles className="h-3 w-3 text-primary-foreground" strokeWidth={2.5} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 mb-1">
+                  <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                     <p className="text-[11px] font-bold text-primary">ملخص الوكيل</p>
                     {req.aiRecommendation === "approve" && (
                       <span className="chip bg-success-soft text-success py-0 text-[10px]">
@@ -166,31 +192,9 @@ function ApprovalCard({
               </div>
 
               {req.aiReasoning && (
-                <>
-                  <button
-                    onClick={() => setShowReasoning((v) => !v)}
-                    className="flex items-center gap-1 text-[11px] text-primary font-medium hover:underline mr-8"
-                  >
-                    {showReasoning ? (
-                      <>
-                        <ChevronUp className="h-3 w-3" /> إخفاء خطوات التحقق
-                      </>
-                    ) : (
-                      <>
-                        <ChevronDown className="h-3 w-3" /> عرض خطوات التحقق ({req.aiReasoning.length})
-                      </>
-                    )}
-                  </button>
-                  {showReasoning && (
-                    <ul className="mr-8 space-y-1 pt-1 animate-fade-up">
-                      {req.aiReasoning.map((step, i) => (
-                        <li key={i} className="text-[11px] text-muted-foreground leading-relaxed">
-                          {step}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </>
+                <div className="mr-8 pt-1">
+                  <ExplainAIPopover reasoning={req.aiReasoning} recommendation={req.aiRecommendation} />
+                </div>
               )}
             </div>
           )}
