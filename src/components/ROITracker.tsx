@@ -15,9 +15,9 @@ const RANGES: { id: Range; label: string }[] = [
 
 // Mock series — daily (last 7), weekly (last 7 weeks), monthly (last 6 months)
 const SERIES: Record<Range, { data: number[]; ticks: string[] }> = {
-  day: { data: [3, 2, 4, 3, 5, 2, 4], ticks: ["س", "أ", "ث", "ر", "خ", "ج", "اليوم"] },
-  week: { data: roiSummary.trend, ticks: ["-٦أ", "-٥أ", "-٤أ", "-٣أ", "-٢أ", "أمس", "هذا الأسبوع"] },
-  month: { data: [52, 61, 58, 70, 66, 78], ticks: ["ديس", "ينا", "فبر", "مار", "أبر", "مايو"] },
+  day: { data: [3, 2, 4, 3, 5, 2, 4], ticks: ["قبل ٦ أيام", "", "", "", "", "أمس", "اليوم"] },
+  week: { data: roiSummary.trend, ticks: ["قبل ٦ أسابيع", "", "", "", "", "الأسبوع الماضي", "هذا الأسبوع"] },
+  month: { data: [52, 61, 58, 70, 66, 78], ticks: ["ديسمبر", "", "", "", "", "مايو"] },
 };
 
 const HEADLINE: Record<Range, { hours: number; riyal: number; deltaLabel: string; rangeLabel: string }> = {
@@ -81,22 +81,21 @@ export function ROITracker() {
             <span className="text-2xl font-bold num">{headline.riyal.toLocaleString("ar-SA")}</span>
             <span className="text-base font-medium">ريال</span>
           </div>
-          {/* Sparkline */}
-          <div className="mt-4 flex items-end gap-1.5 h-12">
+          {/* Sparkline — minimal endpoint labels for cleaner look */}
+          <div className="mt-5 flex items-end gap-1.5 h-14">
             {series.data.map((v, i) => (
               <div key={i} className="flex-1 flex flex-col items-center gap-1">
                 <div
-                  className="w-full rounded-t bg-primary/70 hover:bg-primary transition-colors"
+                  className="w-full rounded-t-md bg-primary/70 hover:bg-primary transition-colors"
                   style={{ height: `${(v / max) * 100}%` }}
-                  title={`${v} ساعة`}
+                  title={`${v}`}
                 />
               </div>
             ))}
           </div>
-          <div className="flex justify-between mt-1 text-[10px] text-muted-foreground">
-            {series.ticks.map((t, i) => (
-              <span key={i}>{t}</span>
-            ))}
+          <div className="flex justify-between mt-2 text-[10px] text-muted-foreground">
+            <span>{series.ticks[0]}</span>
+            <span>{series.ticks[series.ticks.length - 1]}</span>
           </div>
         </div>
 
