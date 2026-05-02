@@ -12,7 +12,7 @@ const iconMap: Record<UnusedPerk["icon"], any> = {
 
 export function ProactivePerks() {
   const [items, setItems] = useState(unusedPerks);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const { toast } = useToast();
 
   if (items.length === 0) return null;
