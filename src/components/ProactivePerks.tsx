@@ -12,7 +12,7 @@ const iconMap: Record<UnusedPerk["icon"], any> = {
 
 export function ProactivePerks() {
   const [items, setItems] = useState(unusedPerks);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const { toast } = useToast();
 
   if (items.length === 0) return null;
@@ -32,9 +32,9 @@ export function ProactivePerks() {
             <Gift className="h-4 w-4 text-primary-foreground" strokeWidth={2.5} />
           </div>
           <div className="min-w-0">
-            <h3 className="text-base font-bold">مزايا غير مستخدمة</h3>
+            <h3 className="text-base font-bold">مزايا تستحقها — لم تُستفد منها بعد</h3>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              اقترحها الوكيل بناءً على ملفك ومدة عملك
+              رصدها رائد لك بناءً على ملفك ومدة عملك — لا تدعها تنتهي
             </p>
           </div>
         </div>

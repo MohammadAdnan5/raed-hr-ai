@@ -40,34 +40,14 @@ export function ManagerView() {
     });
   };
 
+  const pendingCount = requests.length;
+  const safeCount = requests.filter((r) => r.aiRecommendation === "approve").length;
+  const reviewCount = requests.filter((r) => r.aiRecommendation === "review").length;
+
   return (
     <div className="space-y-4">
       {/* 🚨 Always-on top: Red Flags */}
       <RedFlagsAlert />
-
-      {/* Hero */}
-      <div className="bento-card bg-gradient-hero">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex-1 min-w-[240px]">
-            <p className="text-sm text-muted-foreground mb-1">صباح الخير، م. عبدالله</p>
-            <h2 className="text-xl md:text-2xl font-bold tracking-tight leading-tight">
-              لديك <span className="text-primary num">{requests.length}</span> طلبات بانتظار قرارك
-            </h2>
-            <p className="text-sm text-muted-foreground mt-2">
-              راجعتُ كل طلب، طبّقتُ السياسات، وأعطيتُ توصيتي — اعتمد بضغطة واحدة.
-            </p>
-          </div>
-          {requests.filter((r) => r.aiRecommendation === "approve").length > 0 && (
-            <Button
-              onClick={handleBulkAutoApprove}
-              className="rounded-full gap-2 bg-gradient-warm hover:opacity-90 shadow-coral text-primary-foreground"
-            >
-              <Zap className="h-4 w-4" />
-              اعتمد الآمنة دفعة واحدة
-            </Button>
-          )}
-        </div>
-      </div>
 
       {/* Tabbed shell — keeps surface clean */}
       <Tabs defaultValue="overview" dir="rtl" className="space-y-4">
@@ -83,15 +63,43 @@ export function ManagerView() {
           </TabsTrigger>
         </TabsList>
 
-        {/* OVERVIEW: pending list + agent activity */}
+        {/* OVERVIEW: integrated hero + pending list + agent activity */}
         <TabsContent value="overview" className="space-y-4 m-0">
+          {/* Integrated header: hero merges directly into the approvals card */}
           <div className="bento-card p-0 overflow-hidden">
-            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-              <h3 className="text-base font-bold">الموافقات المعلقة</h3>
-              <span className="chip bg-warning-soft text-warning">
-                <span className="num">{requests.length}</span> طلب
-              </span>
+            <div className="px-5 md:px-6 py-5 bg-gradient-hero border-b border-border">
+              <div className="flex items-start justify-between gap-4 flex-wrap">
+                <div className="flex-1 min-w-[240px]">
+                  <p className="text-xs text-muted-foreground mb-1">صباح الخير، م. عبدالله</p>
+                  <h2 className="text-lg md:text-xl font-bold tracking-tight leading-tight">
+                    لديك <span className="text-primary num">{pendingCount}</span> طلبات بانتظار قرارك
+                  </h2>
+                  <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                    {safeCount > 0 && (
+                      <span className="chip bg-success-soft text-success">
+                        <Check className="h-3 w-3" />
+                        <span className="num">{safeCount}</span> آمن للاعتماد
+                      </span>
+                    )}
+                    {reviewCount > 0 && (
+                      <span className="chip bg-warning-soft text-warning">
+                        <span className="num">{reviewCount}</span> يحتاج مراجعتك
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {safeCount > 0 && (
+                  <Button
+                    onClick={handleBulkAutoApprove}
+                    className="rounded-full gap-2 bg-gradient-warm hover:opacity-90 shadow-coral text-primary-foreground"
+                  >
+                    <Zap className="h-4 w-4" />
+                    اعتمد الآمنة دفعة واحدة
+                  </Button>
+                )}
+              </div>
             </div>
+
             {requests.length === 0 ? (
               <div className="p-12 text-center space-y-3">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success-soft">
@@ -116,13 +124,26 @@ export function ManagerView() {
           <AgentActivityFeed activities={managerAgentActivity} />
         </TabsContent>
 
-        {/* ANALYTICS: ROI + Sentiment */}
+        {/* ANALYTICS: ROI + Sentiment + contextual KPIs */}
         <TabsContent value="analytics" className="space-y-4 m-0">
           <ROITracker />
           <SentimentRadar />
-          <div className="grid grid-cols-2 gap-3">
-            <InsightCard label="موافقات هذا الأسبوع" value="١٢" delta="+٣" />
-            <InsightCard label="طلبات الفريق" value="٢٤" delta="+٦" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <InsightCard
+              label="معدل الموافقة الأسبوعي"
+              value="١٢"
+              unit="طلب / ٤٢ مستلم"
+              delta="+٣ عن الأسبوع الماضي"
+              hint="نسبة موافقتك ٨٦٪ — أعلى من متوسط الشركة (٧٤٪)."
+              positive
+            />
+            <InsightCard
+              label="حِمل طلبات الفريق"
+              value="٢٤"
+              unit="طلب نشط هذا الشهر"
+              delta="+٦ عن الشهر الماضي"
+              hint="٣ موظفين يمثّلون ٦٠٪ من الطلبات — قد يستحقون متابعة."
+            />
           </div>
         </TabsContent>
 
@@ -186,6 +207,16 @@ function ApprovalCard({
                         يوصى بالاعتماد
                       </span>
                     )}
+                    {req.aiRecommendation === "review" && (
+                      <span className="chip bg-warning-soft text-warning py-0 text-[10px]">
+                        يحتاج مراجعتك
+                      </span>
+                    )}
+                    {req.aiRecommendation === "reject" && (
+                      <span className="chip bg-destructive/10 text-destructive py-0 text-[10px]">
+                        يوصى بالرفض
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-foreground leading-relaxed">{req.aiSummary}</p>
                 </div>
@@ -230,28 +261,38 @@ function ApprovalCard({
 function InsightCard({
   label,
   value,
+  unit,
   delta,
+  hint,
   positive,
 }: {
   label: string;
   value: string;
+  unit?: string;
   delta: string;
+  hint?: string;
   positive?: boolean;
 }) {
   return (
     <div className="bento-card">
       <p className="text-xs text-muted-foreground mb-1.5">{label}</p>
-      <div className="flex items-baseline gap-2">
+      <div className="flex items-baseline gap-2 flex-wrap">
         <span className="text-2xl font-bold num">{value}</span>
-        <span
-          className={cn(
-            "text-xs font-medium num",
-            positive ? "text-success" : "text-muted-foreground"
-          )}
-        >
-          {delta}
-        </span>
+        {unit && <span className="text-[11px] text-muted-foreground">{unit}</span>}
       </div>
+      <p
+        className={cn(
+          "text-[11px] font-medium num mt-1",
+          positive ? "text-success" : "text-muted-foreground"
+        )}
+      >
+        {delta}
+      </p>
+      {hint && (
+        <p className="text-[11px] text-muted-foreground leading-relaxed mt-2 pt-2 border-t border-border">
+          {hint}
+        </p>
+      )}
     </div>
   );
 }
