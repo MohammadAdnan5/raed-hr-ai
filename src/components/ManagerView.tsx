@@ -186,6 +186,16 @@ function ApprovalCard({
                         يوصى بالاعتماد
                       </span>
                     )}
+                    {req.aiRecommendation === "review" && (
+                      <span className="chip bg-warning-soft text-warning py-0 text-[10px]">
+                        يحتاج مراجعتك
+                      </span>
+                    )}
+                    {req.aiRecommendation === "reject" && (
+                      <span className="chip bg-destructive/10 text-destructive py-0 text-[10px]">
+                        يوصى بالرفض
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-foreground leading-relaxed">{req.aiSummary}</p>
                 </div>
