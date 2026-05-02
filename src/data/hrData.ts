@@ -244,7 +244,7 @@ export interface AutoRule {
   scope: string;
   enabled: boolean;
   triggeredCount: number;
-  riskLevel: "low" | "medium";
+  riskLevel: "low" | "medium" | "high";
 }
 
 export const autoApprovalRules: AutoRule[] = [
@@ -292,6 +292,24 @@ export const autoApprovalRules: AutoRule[] = [
     enabled: false,
     triggeredCount: 0,
     riskLevel: "medium",
+  },
+  {
+    id: "rule-6",
+    name: "اعتماد بدلات استثنائية",
+    condition: "بدل انتقال أو سكن خارج الجدول المعتمد",
+    scope: "كل الموظفين",
+    enabled: false,
+    triggeredCount: 0,
+    riskLevel: "high",
+  },
+  {
+    id: "rule-7",
+    name: "تعديلات على الراتب الأساسي",
+    condition: "أي تعديل على بنود الأجر الثابتة",
+    scope: "—",
+    enabled: false,
+    triggeredCount: 0,
+    riskLevel: "high",
   },
 ];
 
@@ -514,7 +532,7 @@ export interface OnboardingTask {
   done: boolean;
   category: "policy" | "social" | "setup" | "training";
 }
-export const onboardingProgress = { day: 7, totalDays: 90, completed: 5, total: 14 };
+export const onboardingProgress = { day: 7, totalDays: 90, completed: 5, total: 18 };
 export const onboardingTasks: OnboardingTask[] = [
   { id: "ob-1", day: 1, title: "اقرأ ميثاق سلوك العمل", description: "٣ دقائق فقط — الأساسيات التي تحفظ بيئة آمنة للجميع.", done: true, category: "policy" },
   { id: "ob-2", day: 1, title: "تعرّف على مزايا التأمين", description: "ما الذي يغطيه تأمينك الصحي ومتى تستخدمه.", done: true, category: "policy" },
@@ -523,7 +541,17 @@ export const onboardingTasks: OnboardingTask[] = [
   { id: "ob-5", day: 5, title: "أكمل تدريب الأمن السيبراني", description: "إلزامي خلال أول أسبوعين.", done: true, category: "training" },
   { id: "ob-6", day: 7, title: "اجتماع تقييم الانطباع الأول", description: "اليوم ٢ م مع مديرك المباشر.", done: false, category: "social" },
   { id: "ob-7", day: 14, title: "اختر هدفاً لربع السنة", description: "سنناقشه في تقييم نهاية فترة التجربة.", done: false, category: "training" },
-  { id: "ob-8", day: 30, title: "تقييم نهاية الشهر الأول", description: "جلسة قصيرة مع مديرك ومع HR.", done: false, category: "policy" },
+  { id: "ob-8", day: 21, title: "تدريب على أدوات الفريق الداخلية", description: "ورشة عملية ساعتين مع قائد الفريق التقني.", done: false, category: "training" },
+  { id: "ob-9", day: 30, title: "تقييم نهاية الشهر الأول", description: "جلسة قصيرة مع مديرك ومع HR.", done: false, category: "policy" },
+  { id: "ob-10", day: 35, title: "ابدأ مشروعك الأول المستقل", description: "مهمة صغيرة ومحدودة لتعمّق فهمك للسياق.", done: false, category: "training" },
+  { id: "ob-11", day: 45, title: "جلسة تغذية راجعة منتصف الفترة", description: "نقاش صريح حول ما يسير جيداً وما يحتاج تعديل.", done: false, category: "social" },
+  { id: "ob-12", day: 50, title: "تعرّف على فِرَق أخرى", description: "قهوة افتراضية مع ٣ زملاء من خارج فريقك.", done: false, category: "social" },
+  { id: "ob-13", day: 60, title: "أكمل تدريب القيم والثقافة", description: "مسار قصير لفهم طريقة عملنا واتخاذ القرار.", done: false, category: "training" },
+  { id: "ob-14", day: 65, title: "حدّث ملفك الشخصي الكامل", description: "صورة، مهارات، خبرات — يساعد فريقك على التواصل.", done: false, category: "setup" },
+  { id: "ob-15", day: 75, title: "عرض إنجازات أول مشروع", description: "شارك ما تعلّمته مع الفريق في ١٥ دقيقة.", done: false, category: "training" },
+  { id: "ob-16", day: 80, title: "راجع أهداف الربع مع مديرك", description: "تأكد من المواءمة قبل التقييم الختامي.", done: false, category: "policy" },
+  { id: "ob-17", day: 88, title: "استبيان تجربة الانضمام", description: "رأيك يساعدنا على تحسين رحلة من بعدك.", done: false, category: "policy" },
+  { id: "ob-18", day: 90, title: "تقييم نهاية فترة التجربة", description: "اجتماع رسمي مع مديرك و HR لإقرار التثبيت.", done: false, category: "policy" },
 ];
 
 // ===== Employee: What-If Simulator scenarios =====
