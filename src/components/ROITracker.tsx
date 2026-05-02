@@ -15,9 +15,9 @@ const RANGES: { id: Range; label: string }[] = [
 
 // Mock series — daily (last 7), weekly (last 7 weeks), monthly (last 6 months)
 const SERIES: Record<Range, { data: number[]; ticks: string[] }> = {
-  day: { data: [3, 2, 4, 3, 5, 2, 4], ticks: ["س", "أ", "ث", "ر", "خ", "ج", "اليوم"] },
-  week: { data: roiSummary.trend, ticks: ["-٦أ", "-٥أ", "-٤أ", "-٣أ", "-٢أ", "أمس", "هذا الأسبوع"] },
-  month: { data: [52, 61, 58, 70, 66, 78], ticks: ["ديس", "ينا", "فبر", "مار", "أبر", "مايو"] },
+  day: { data: [3, 2, 4, 3, 5, 2, 4], ticks: ["قبل ٦ أيام", "", "", "", "", "أمس", "اليوم"] },
+  week: { data: roiSummary.trend, ticks: ["قبل ٦ أسابيع", "", "", "", "", "الأسبوع الماضي", "هذا الأسبوع"] },
+  month: { data: [52, 61, 58, 70, 66, 78], ticks: ["ديسمبر", "", "", "", "", "مايو"] },
 };
 
 const HEADLINE: Record<Range, { hours: number; riyal: number; deltaLabel: string; rangeLabel: string }> = {
