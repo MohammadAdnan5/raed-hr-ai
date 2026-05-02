@@ -261,28 +261,38 @@ function ApprovalCard({
 function InsightCard({
   label,
   value,
+  unit,
   delta,
+  hint,
   positive,
 }: {
   label: string;
   value: string;
+  unit?: string;
   delta: string;
+  hint?: string;
   positive?: boolean;
 }) {
   return (
     <div className="bento-card">
       <p className="text-xs text-muted-foreground mb-1.5">{label}</p>
-      <div className="flex items-baseline gap-2">
+      <div className="flex items-baseline gap-2 flex-wrap">
         <span className="text-2xl font-bold num">{value}</span>
-        <span
-          className={cn(
-            "text-xs font-medium num",
-            positive ? "text-success" : "text-muted-foreground"
-          )}
-        >
-          {delta}
-        </span>
+        {unit && <span className="text-[11px] text-muted-foreground">{unit}</span>}
       </div>
+      <p
+        className={cn(
+          "text-[11px] font-medium num mt-1",
+          positive ? "text-success" : "text-muted-foreground"
+        )}
+      >
+        {delta}
+      </p>
+      {hint && (
+        <p className="text-[11px] text-muted-foreground leading-relaxed mt-2 pt-2 border-t border-border">
+          {hint}
+        </p>
+      )}
     </div>
   );
 }
