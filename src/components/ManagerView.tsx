@@ -67,14 +67,19 @@ export function ManagerView() {
         <TabsContent value="overview" className="space-y-4 m-0">
           {/* Integrated header: hero merges directly into the approvals card */}
           <div className="bento-card p-0 overflow-hidden">
-            <div className="px-5 md:px-6 py-5 bg-gradient-hero border-b border-border">
-              <div className="flex items-start justify-between gap-4 flex-wrap">
-                <div className="flex-1 min-w-[240px]">
-                  <p className="text-xs text-muted-foreground mb-1">صباح الخير، م. عبدالله</p>
-                  <h2 className="text-lg md:text-xl font-bold tracking-tight leading-tight">
-                    لديك <span className="text-primary num">{pendingCount}</span> طلبات بانتظار قرارك
+            <div className="px-6 md:px-8 py-7 md:py-8 bg-gradient-hero border-b border-border">
+              <div className="flex items-start justify-between gap-5 flex-wrap">
+                <div className="flex-1 min-w-[260px] space-y-3">
+                  <p className="text-sm text-muted-foreground">صباح الخير، م. عبدالله</p>
+                  <h2 className="text-3xl md:text-4xl font-black tracking-tight leading-[1.15]">
+                    لديك <span className="text-primary num">{pendingCount}</span> طلبات
+                    <br className="hidden sm:block" />
+                    بانتظار قرارك اليوم
                   </h2>
-                  <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                  <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
+                    راجعتُ كل طلب، طبّقتُ السياسات، وأعددتُ توصيتي لكل حالة — لتقرّر بثقة في ثوانٍ بدلاً من ساعات.
+                  </p>
+                  <div className="flex items-center gap-2 pt-1 flex-wrap">
                     {safeCount > 0 && (
                       <span className="chip bg-success-soft text-success">
                         <Check className="h-3 w-3" />
@@ -91,7 +96,8 @@ export function ManagerView() {
                 {safeCount > 0 && (
                   <Button
                     onClick={handleBulkAutoApprove}
-                    className="rounded-full gap-2 bg-gradient-warm hover:opacity-90 shadow-coral text-primary-foreground"
+                    size="lg"
+                    className="rounded-full gap-2 bg-gradient-warm hover:opacity-90 shadow-coral text-primary-foreground self-start"
                   >
                     <Zap className="h-4 w-4" />
                     اعتمد الآمنة دفعة واحدة
