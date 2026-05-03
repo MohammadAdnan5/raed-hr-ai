@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Zap, Shield, Settings2, Pencil, AlertTriangle, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Zap, Shield, Settings2, Pencil, AlertTriangle, ShieldCheck, ShieldAlert, Plus, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { autoApprovalRules, AutoRule } from "@/data/hrData";
 import { useToast } from "@/hooks/use-toast";
@@ -8,7 +8,71 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// ===== Condition Builder primitives =====
+type Attr =
+  | "leave_days"
+  | "leave_balance"
+  | "remote_days_month"
+  | "calendar_conflict"
+  | "doc_template"
+  | "field_type"
+  | "amount_sar"
+  | "salary_change";
+
+type Operator = "lte" | "gte" | "eq" | "neq" | "is_true" | "is_false" | "in";
+
+interface Clause {
+  id: string;
+  attr: Attr;
+  op: Operator;
+  value: string;
+}
+
+const ATTR_META: Record<Attr, { label: string; ops: Operator[]; valueType: "number" | "text" | "boolean" | "select"; options?: string[]; unit?: string }> = {
+  leave_days:        { label: "عدد أيام الإجازة", ops: ["lte", "gte", "eq"], valueType: "number", unit: "يوم" },
+  leave_balance:     { label: "رصيد الإجازة المتاح", ops: ["gte", "lte"], valueType: "number", unit: "يوم" },
+  remote_days_month: { label: "أيام العمل عن بُعد/شهر", ops: ["lte", "gte"], valueType: "number", unit: "يوم" },
+  calendar_conflict: { label: "تعارض في التقويم", ops: ["is_true", "is_false"], valueType: "boolean" },
+  doc_template:      { label: "نوع الوثيقة", ops: ["in"], valueType: "select", options: ["خطاب تعريف", "شهادة عمل", "تأييد رسمي"] },
+  field_type:        { label: "حقل البيانات الشخصية", ops: ["in"], valueType: "select", options: ["جوال", "عنوان", "حالة اجتماعية"] },
+  amount_sar:        { label: "المبلغ", ops: ["lte", "gte"], valueType: "number", unit: "ريال" },
+  salary_change:     { label: "تعديل على الراتب", ops: ["is_true", "is_false"], valueType: "boolean" },
+};
+
+const OP_LABEL: Record<Operator, string> = {
+  lte: "≤", gte: "≥", eq: "=", neq: "≠", is_true: "نعم", is_false: "لا", in: "ضمن",
+};
+
+const SCOPE_OPTIONS = [
+  "كل الموظفين",
+  "كل أعضاء الفريق",
+  "الفرق التقنية فقط",
+  "فريق المبيعات فقط",
+  "فريق التسويق فقط",
+  "—",
+];
+
+function clauseToText(c: Clause): string {
+  const meta = ATTR_META[c.attr];
+  if (meta.valueType === "boolean") {
+    return `${meta.label}: ${c.op === "is_true" ? "نعم" : "لا"}`;
+  }
+  const unit = meta.unit ? ` ${meta.unit}` : "";
+  return `${meta.label} ${OP_LABEL[c.op]} ${c.value}${unit}`;
+}
+
+function clausesToCondition(cs: Clause[]): string {
+  if (cs.length === 0) return "بدون شرط";
+  return cs.map(clauseToText).join("  •  ");
+}
+
+// Best-effort parse of legacy free-text condition into a single read-only clause
+function seedClauses(_condition: string): Clause[] {
+  return [{ id: crypto.randomUUID(), attr: "leave_days", op: "lte", value: "2" }];
+}
+
 
 type Risk = AutoRule["riskLevel"];
 
