@@ -263,8 +263,8 @@ export function AutoApprovalRules() {
       </div>
 
       {/* Edit Dialog */}
-      <Dialog open={!!editing} onOpenChange={(o) => !o && (setEditing(null), setDraft(null))}>
-        <DialogContent dir="rtl" className="sm:max-w-md">
+      <Dialog open={!!editing} onOpenChange={(o) => !o && closeEdit()}>
+        <DialogContent dir="rtl" className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="text-right">
             <DialogTitle>تعديل القاعدة</DialogTitle>
             <DialogDescription>
@@ -283,23 +283,157 @@ export function AutoApprovalRules() {
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="rule-cond" className="text-xs">الشرط</Label>
-                <Textarea
-                  id="rule-cond"
-                  rows={2}
-                  value={draft.condition}
-                  onChange={(e) => setDraft({ ...draft, condition: e.target.value })}
-                />
+              {/* ===== Condition Builder ===== */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">الشروط</Label>
+                  <span className="text-[10px] text-muted-foreground">
+                    تُطبَّق جميع الشروط معاً (AND)
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  {clauses.length === 0 && (
+                    <p className="text-[11px] text-muted-foreground bg-secondary/50 rounded-lg p-3 text-center">
+                      لا توجد شروط — أضف شرطاً ليبدأ الوكيل بالتنفيذ.
+                    </p>
+                  )}
+                  {clauses.map((c, idx) => {
+                    const meta = ATTR_META[c.attr];
+                    return (
+                      <div key={c.id} className="rounded-xl border border-border bg-secondary/30 p-2.5">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[10px] text-muted-foreground font-medium num">
+                            شرط {idx + 1}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removeClause(c.id)}
+                            className="h-6 w-6 rounded-md hover:bg-destructive/10 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
+                            aria-label="حذف الشرط"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-12 gap-2">
+                          {/* Attribute */}
+                          <div className="col-span-12 sm:col-span-5">
+                            <Select
+                              value={c.attr}
+                              onValueChange={(v) => updateClause(c.id, { attr: v as Attr })}
+                            >
+                              <SelectTrigger className="h-9 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {(Object.keys(ATTR_META) as Attr[]).map((a) => (
+                                  <SelectItem key={a} value={a} className="text-xs">
+                                    {ATTR_META[a].label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          {/* Operator */}
+                          <div className="col-span-4 sm:col-span-3">
+                            <Select
+                              value={c.op}
+                              onValueChange={(v) => updateClause(c.id, { op: v as Operator })}
+                            >
+                              <SelectTrigger className="h-9 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {meta.ops.map((op) => (
+                                  <SelectItem key={op} value={op} className="text-xs">
+                                    {OP_LABEL[op]}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          {/* Value */}
+                          <div className="col-span-8 sm:col-span-4">
+                            {meta.valueType === "boolean" ? (
+                              <div className="h-9 px-3 rounded-md bg-card border border-input flex items-center text-[11px] text-muted-foreground">
+                                {c.op === "is_true" ? "نعم" : "لا"}
+                              </div>
+                            ) : meta.valueType === "select" ? (
+                              <Select
+                                value={c.value || meta.options?.[0]}
+                                onValueChange={(v) => updateClause(c.id, { value: v })}
+                              >
+                                <SelectTrigger className="h-9 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {meta.options?.map((opt) => (
+                                    <SelectItem key={opt} value={opt} className="text-xs">
+                                      {opt}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <div className="relative">
+                                <Input
+                                  type="number"
+                                  inputMode="numeric"
+                                  className="h-9 text-xs num pl-12"
+                                  value={c.value}
+                                  onChange={(e) => updateClause(c.id, { value: e.target.value })}
+                                />
+                                {meta.unit && (
+                                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
+                                    {meta.unit}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addClause}
+                  className="w-full rounded-lg gap-1.5 h-8 text-xs border-dashed"
+                >
+                  <Plus className="h-3.5 w-3.5" /> أضف شرطاً
+                </Button>
+
+                {/* Live preview */}
+                <div className="rounded-lg bg-primary-soft/40 border border-primary/20 px-3 py-2">
+                  <p className="text-[10px] font-bold text-primary mb-0.5">معاينة القاعدة</p>
+                  <p className="text-[11px] text-foreground leading-relaxed">
+                    {clausesToCondition(clauses)}
+                  </p>
+                </div>
               </div>
 
+              {/* ===== Scope as Select ===== */}
               <div className="space-y-1.5">
                 <Label htmlFor="rule-scope" className="text-xs">النطاق</Label>
-                <Input
-                  id="rule-scope"
-                  value={draft.scope}
-                  onChange={(e) => setDraft({ ...draft, scope: e.target.value })}
-                />
+                <Select
+                  value={SCOPE_OPTIONS.includes(draft.scope) ? draft.scope : SCOPE_OPTIONS[0]}
+                  onValueChange={(v) => setDraft({ ...draft, scope: v })}
+                >
+                  <SelectTrigger id="rule-scope" className="h-9 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SCOPE_OPTIONS.map((s) => (
+                      <SelectItem key={s} value={s} className="text-xs">
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-1.5">
@@ -350,7 +484,7 @@ export function AutoApprovalRules() {
           )}
 
           <DialogFooter className="gap-2 sm:gap-2">
-            <Button variant="outline" onClick={() => (setEditing(null), setDraft(null))}>
+            <Button variant="outline" onClick={closeEdit}>
               إلغاء
             </Button>
             <Button onClick={saveEdit} className="bg-primary hover:bg-primary-hover">
