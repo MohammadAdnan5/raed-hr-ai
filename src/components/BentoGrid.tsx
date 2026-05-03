@@ -22,7 +22,7 @@ export function BentoGrid({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenP
       <div className="col-span-12 lg:col-span-8 bento-card bg-gradient-hero">
         <div className="flex flex-col h-full justify-between gap-4">
           <div>
-            <p className="text-sm text-muted-foreground mb-1">مرحباً عبدالله 👋</p>
+            <p className="text-sm text-muted-foreground mb-1">مرحباً خالد 👋</p>
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight leading-tight">
               كل ما تحتاجه من <span className="text-primary">الموارد البشرية</span>
               <br />

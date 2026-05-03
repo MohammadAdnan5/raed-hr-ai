@@ -1,67 +1,90 @@
-import { Activity, AlertCircle } from "lucide-react";
+import { Activity, AlertCircle, TrendingDown, TrendingUp } from "lucide-react";
 import { sentimentRadar, sentimentOverall } from "@/data/hrData";
 import { cn } from "@/lib/utils";
 
-function moodColor(mood: number) {
-  if (mood >= 75) return "text-success";
-  if (mood >= 60) return "text-info";
-  return "text-warning";
+function moodTone(mood: number) {
+  if (mood >= 75) return { color: "text-success", bar: "bg-success", label: "ممتاز" };
+  if (mood >= 60) return { color: "text-info", bar: "bg-info", label: "مقبول" };
+  return { color: "text-warning", bar: "bg-warning", label: "منخفض" };
 }
-function stressBg(stress: number) {
-  if (stress >= 70) return "bg-destructive";
-  if (stress >= 55) return "bg-warning";
-  return "bg-success";
+function stressTone(stress: number) {
+  if (stress >= 70) return { color: "text-destructive", bar: "bg-destructive", label: "مرتفع" };
+  if (stress >= 55) return { color: "text-warning", bar: "bg-warning", label: "متوسط" };
+  return { color: "text-success", bar: "bg-success", label: "منخفض" };
 }
 
 export function SentimentRadar() {
+  const deltaPositive = sentimentOverall.weekDelta >= 0;
+
   return (
     <div className="bento-card p-0 overflow-hidden">
-      <div className="px-5 py-4 border-b border-border flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-warm shadow-coral">
-            <Activity className="h-4 w-4 text-primary-foreground" strokeWidth={2.5} />
-          </div>
-          <div>
-            <h3 className="text-base font-bold">رادار المزاج العام</h3>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              مبني على إشارات لغوية مجهولة الهوية من تفاعلات الفريق
-            </p>
+      {/* Header */}
+      <div className="px-5 py-4 border-b border-border">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-warm shadow-coral shrink-0">
+              <Activity className="h-4 w-4 text-primary-foreground" strokeWidth={2.5} />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-base font-bold leading-tight">رادار المزاج العام</h3>
+              <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                إشارات لغوية مجهولة الهوية من تفاعلات الفريق
+              </p>
+            </div>
           </div>
         </div>
-        <span className={cn("chip", sentimentOverall.weekDelta < 0 ? "bg-warning-soft text-warning" : "bg-success-soft text-success")}>
-          {sentimentOverall.weekDelta > 0 ? "+" : ""}{sentimentOverall.weekDelta} هذا الأسبوع
-        </span>
       </div>
 
-      {/* Overall */}
-      <div className="px-5 py-4 grid grid-cols-2 gap-4 border-b border-border">
-        <div>
-          <p className="text-xs text-muted-foreground mb-1">المزاج العام</p>
-          <div className="flex items-baseline gap-1.5">
-            <span className={cn("text-3xl font-bold num", moodColor(sentimentOverall.mood))}>
+      {/* KPI strip — overall mood + stress + delta */}
+      <div className="grid grid-cols-3 divide-x divide-x-reverse divide-border border-b border-border">
+        <div className="p-4">
+          <p className="text-[11px] text-muted-foreground mb-1.5">المزاج العام</p>
+          <div className="flex items-baseline gap-1">
+            <span className={cn("text-2xl font-bold num", moodTone(sentimentOverall.mood).color)}>
               {sentimentOverall.mood}
             </span>
-            <span className="text-xs text-muted-foreground">/ ١٠٠</span>
+            <span className="text-[11px] text-muted-foreground">/ ١٠٠</span>
           </div>
         </div>
-        <div>
-          <p className="text-xs text-muted-foreground mb-1">مستوى الضغط</p>
-          <div className="h-2 rounded-full bg-secondary overflow-hidden">
-            <div className={cn("h-full rounded-full transition-all", stressBg(sentimentOverall.stress))}
-                 style={{ width: `${sentimentOverall.stress}%` }} />
+        <div className="p-4">
+          <p className="text-[11px] text-muted-foreground mb-1.5">مستوى الضغط</p>
+          <div className="flex items-baseline gap-1">
+            <span className={cn("text-2xl font-bold num", stressTone(sentimentOverall.stress).color)}>
+              {sentimentOverall.stress}
+            </span>
+            <span className="text-[11px] text-muted-foreground">/ ١٠٠</span>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1.5 num">{sentimentOverall.stress}%</p>
+        </div>
+        <div className="p-4">
+          <p className="text-[11px] text-muted-foreground mb-1.5">التغيّر الأسبوعي</p>
+          <div
+            className={cn(
+              "inline-flex items-center gap-1 text-2xl font-bold num",
+              deltaPositive ? "text-success" : "text-warning"
+            )}
+          >
+            {deltaPositive ? (
+              <TrendingUp className="h-4 w-4" />
+            ) : (
+              <TrendingDown className="h-4 w-4" />
+            )}
+            {deltaPositive ? "+" : ""}
+            {sentimentOverall.weekDelta}
+          </div>
         </div>
       </div>
 
-      {/* Per-team */}
+      {/* Per-team — clean grid, each team gets two distinct lines */}
       <div className="divide-y divide-border">
         {sentimentRadar.map((s) => {
+          const mt = moodTone(s.mood);
+          const st = stressTone(s.stress);
           const isHot = s.stress >= 70;
           return (
-            <div key={s.team} className="p-4 hover:bg-secondary/30 transition-colors">
-              <div className="flex items-center justify-between gap-3 mb-2">
-                <div className="flex items-center gap-2">
+            <div key={s.team} className="p-5 hover:bg-secondary/20 transition-colors">
+              {/* Team name row */}
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div className="flex items-center gap-2 min-w-0">
                   <p className="text-sm font-bold">{s.team}</p>
                   {isHot && (
                     <span className="chip bg-destructive/10 text-destructive text-[10px]">
@@ -69,21 +92,27 @@ export function SentimentRadar() {
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-3 text-[11px]">
-                  <span className="text-muted-foreground">المزاج: <span className={cn("font-bold num", moodColor(s.mood))}>{s.mood}</span></span>
-                  <span className="text-muted-foreground">الضغط: <span className="font-bold num">{s.stress}</span></span>
-                </div>
               </div>
-              {/* Stacked dual bar */}
-              <div className="flex gap-1 h-1.5 rounded-full overflow-hidden bg-secondary">
-                <div className="bg-success/70 transition-all" style={{ width: `${s.mood}%` }} />
-                <div className={cn("transition-all", stressBg(s.stress))} style={{ width: `${s.stress / 2}%` }} />
+
+              {/* Two parallel metrics — each on its own line, breathing room */}
+              <div className="space-y-2.5">
+                <MetricBar label="المزاج" value={s.mood} tone={mt} />
+                <MetricBar label="الضغط" value={s.stress} tone={st} />
               </div>
-              <ul className="mt-2 space-y-0.5">
-                {s.signals.map((sig, i) => (
-                  <li key={i} className="text-[11px] text-muted-foreground">• {sig}</li>
-                ))}
-              </ul>
+
+              {/* Signals */}
+              {s.signals.length > 0 && (
+                <ul className="mt-3 flex flex-wrap gap-1.5">
+                  {s.signals.map((sig, i) => (
+                    <li
+                      key={i}
+                      className="text-[10px] text-muted-foreground bg-secondary/60 px-2 py-1 rounded-md"
+                    >
+                      {sig}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           );
         })}
@@ -93,6 +122,34 @@ export function SentimentRadar() {
         <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
           البيانات مجمّعة ومجهولة الهوية — لا تكشف عن أفراد بعينهم احتراماً للخصوصية.
         </p>
+      </div>
+    </div>
+  );
+}
+
+function MetricBar({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: { color: string; bar: string; label: string };
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between text-[11px] mb-1">
+        <span className="text-muted-foreground">{label}</span>
+        <span className="flex items-center gap-1.5">
+          <span className={cn("font-medium", tone.color)}>{tone.label}</span>
+          <span className={cn("font-bold num", tone.color)}>{value}</span>
+        </span>
+      </div>
+      <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+        <div
+          className={cn("h-full rounded-full transition-all", tone.bar)}
+          style={{ width: `${value}%` }}
+        />
       </div>
     </div>
   );
