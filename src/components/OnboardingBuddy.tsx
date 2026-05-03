@@ -110,19 +110,40 @@ export function OnboardingBuddy({ enabled, onToggle }: Props) {
               <span>كل مسار الـ ٩٠ يوماً</span>
               <ChevronDown className="h-3.5 w-3.5 group-open:rotate-180 transition-transform" />
             </summary>
-            <ol className="mt-3 space-y-1.5">
-              {onboardingTasks.map((t) => (
-                <li key={t.id} className="flex items-center gap-2 text-xs">
-                  {t.done ? (
-                    <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
-                  ) : (
-                    <Circle className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  )}
-                  <span className={cn("text-[10px] text-muted-foreground num shrink-0 w-10")}>يوم {t.day}</span>
-                  <span className={cn("flex-1 truncate", t.done && "line-through text-muted-foreground")}>{t.title}</span>
-                </li>
-              ))}
-            </ol>
+            <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+              {[
+                { label: "الشهر الأول", range: "أيام ١ – ٣٠", from: 1, to: 30, accent: "bg-primary/10 text-primary border-primary/30" },
+                { label: "الشهر الثاني", range: "أيام ٣١ – ٦٠", from: 31, to: 60, accent: "bg-info/10 text-info border-info/30" },
+                { label: "الشهر الثالث", range: "أيام ٦١ – ٩٠", from: 61, to: 90, accent: "bg-success-soft text-success border-success/30" },
+              ].map((col) => {
+                const colTasks = onboardingTasks.filter((t) => t.day >= col.from && t.day <= col.to);
+                const doneCount = colTasks.filter((t) => t.done).length;
+                return (
+                  <div key={col.label} className="rounded-xl border border-border bg-secondary/30 p-3 flex flex-col">
+                    <div className={cn("inline-flex self-start items-center gap-1.5 chip border text-[10px] mb-2.5", col.accent)}>
+                      <span className="font-bold">{col.label}</span>
+                      <span className="opacity-70 num">· {col.range}</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mb-2 num">
+                      {doneCount} / {colTasks.length} مكتملة
+                    </p>
+                    <ol className="space-y-1.5 flex-1">
+                      {colTasks.map((t) => (
+                        <li key={t.id} className="flex items-start gap-2 text-xs">
+                          {t.done ? (
+                            <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0 mt-0.5" />
+                          ) : (
+                            <Circle className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                          )}
+                          <span className="text-[10px] text-muted-foreground num shrink-0 mt-0.5 w-7">ي{t.day}</span>
+                          <span className={cn("flex-1 leading-snug", t.done && "line-through text-muted-foreground")}>{t.title}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                );
+              })}
+            </div>
           </details>
         </div>
       )}
