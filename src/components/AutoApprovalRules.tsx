@@ -101,6 +101,7 @@ export function AutoApprovalRules() {
   const [rules, setRules] = useState<AutoRule[]>(autoApprovalRules);
   const [editing, setEditing] = useState<AutoRule | null>(null);
   const [draft, setDraft] = useState<AutoRule | null>(null);
+  const [clauses, setClauses] = useState<Clause[]>([]);
   const { toast } = useToast();
 
   const toggle = (id: string) => {
@@ -120,18 +121,58 @@ export function AutoApprovalRules() {
   const openEdit = (r: AutoRule) => {
     setEditing(r);
     setDraft({ ...r });
+    setClauses(seedClauses(r.condition));
+  };
+
+  const closeEdit = () => {
+    setEditing(null);
+    setDraft(null);
+    setClauses([]);
+  };
+
+  const addClause = () => {
+    setClauses((cs) => [
+      ...cs,
+      { id: crypto.randomUUID(), attr: "leave_days", op: "lte", value: "2" },
+    ]);
+  };
+
+  const updateClause = (id: string, patch: Partial<Clause>) => {
+    setClauses((cs) =>
+      cs.map((c) => {
+        if (c.id !== id) return c;
+        const next = { ...c, ...patch };
+        // Reset op + value if attribute changed and op no longer valid
+        if (patch.attr && patch.attr !== c.attr) {
+          const meta = ATTR_META[patch.attr];
+          next.op = meta.ops[0];
+          next.value =
+            meta.valueType === "boolean"
+              ? ""
+              : meta.valueType === "select"
+              ? meta.options?.[0] ?? ""
+              : "";
+        }
+        return next;
+      })
+    );
+  };
+
+  const removeClause = (id: string) => {
+    setClauses((cs) => cs.filter((c) => c.id !== id));
   };
 
   const saveEdit = () => {
     if (!draft) return;
-    setRules((rs) => rs.map((r) => (r.id === draft.id ? draft : r)));
+    const next: AutoRule = { ...draft, condition: clausesToCondition(clauses) };
+    setRules((rs) => rs.map((r) => (r.id === next.id ? next : r)));
     toast({
       title: "تم حفظ التعديلات",
-      description: `${draft.name} — تم تحديث القاعدة بنجاح.`,
+      description: `${next.name} — تم تحديث القاعدة بنجاح.`,
     });
-    setEditing(null);
-    setDraft(null);
+    closeEdit();
   };
+
 
   const activeCount = rules.filter((r) => r.enabled).length;
   const totalTriggered = rules.reduce((s, r) => s + r.triggeredCount, 0);
