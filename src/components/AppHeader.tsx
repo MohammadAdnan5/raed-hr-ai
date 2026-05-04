@@ -49,11 +49,31 @@ export function AppHeader() {
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {role === "manager" && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setArchOpen(true)}
+              className="rounded-full relative group"
+              aria-label="الهيكلية التقنية ومسار الوكيل"
+              title="الهيكلية التقنية ومسار الوكيل"
+            >
+              <Workflow className="h-5 w-5 text-primary transition-transform group-hover:scale-110" />
+              <span className="absolute -top-0.5 -left-0.5 h-2 w-2 rounded-full bg-primary animate-pulse" />
+            </Button>
+          )}
+
           <NotificationsPopover />
 
           <img src={logo} alt="رائد" className="h-9 w-9 rounded-full object-contain bg-secondary p-1" />
         </div>
       </div>
+
+      <Dialog open={archOpen} onOpenChange={setArchOpen}>
+        <DialogContent className="max-w-[98vw] w-[1400px] h-[92vh] p-0 overflow-hidden border-white/10 bg-[#0b1020] [&>button]:text-white [&>button]:z-50">
+          <ArchitectureView />
+        </DialogContent>
+      </Dialog>
     </header>
   );
 }
