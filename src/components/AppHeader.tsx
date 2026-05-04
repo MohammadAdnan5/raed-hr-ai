@@ -15,6 +15,7 @@ import {
 
 export function AppHeader() {
   const { role, setRole } = useRole();
+  const [archOpen, setArchOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/80 backdrop-blur-md">
