@@ -1,8 +1,11 @@
-import { ChevronDown } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, Workflow } from "lucide-react";
 import { useRole } from "@/context/RoleContext";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import logo from "@/assets/raed-wordmark.png";
 import { NotificationsPopover } from "./NotificationsPopover";
+import { ArchitectureView } from "./ArchitectureView";
 import {
   DropdownMenu,
   DropdownMenuContent,
