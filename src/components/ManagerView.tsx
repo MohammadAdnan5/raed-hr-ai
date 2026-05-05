@@ -45,13 +45,54 @@ export function ManagerView() {
   const reviewCount = requests.filter((r) => r.aiRecommendation === "review").length;
 
   return (
-    <div className="space-y-4">
-      {/* 🚨 Always-on top: Red Flags */}
+    <div className="space-y-6 md:space-y-8">
+      {/* 🌅 HERO — always at the absolute top, anchors the page */}
+      <header className="relative overflow-hidden rounded-3xl border border-border bg-gradient-hero px-6 md:px-10 py-8 md:py-10">
+        <div className="absolute inset-0 pointer-events-none opacity-60 bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.08),transparent_60%)]" />
+        <div className="relative flex items-start justify-between gap-6 flex-wrap">
+          <div className="flex-1 min-w-[280px] space-y-4">
+            <p className="text-sm text-muted-foreground">صباح الخير، م. عبدالله</p>
+            <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.1]">
+              لديك <span className="text-primary num">{pendingCount}</span> طلبات
+              <br className="hidden sm:block" />
+              بانتظار قرارك اليوم
+            </h2>
+            <p className="text-sm md:text-base text-muted-foreground leading-relaxed max-w-2xl">
+              راجعتُ كل طلب، طبّقتُ السياسات، وأعددتُ توصيتي لكل حالة — لتقرّر بثقة في ثوانٍ بدلاً من ساعات.
+            </p>
+            <div className="flex items-center gap-2 pt-1 flex-wrap">
+              {safeCount > 0 && (
+                <span className="chip bg-success-soft text-success">
+                  <Check className="h-3 w-3" />
+                  <span className="num">{safeCount}</span> آمن للاعتماد
+                </span>
+              )}
+              {reviewCount > 0 && (
+                <span className="chip bg-warning-soft text-warning">
+                  <span className="num">{reviewCount}</span> يحتاج مراجعتك
+                </span>
+              )}
+            </div>
+          </div>
+          {safeCount > 0 && (
+            <Button
+              onClick={handleBulkAutoApprove}
+              size="lg"
+              className="rounded-full gap-2 bg-gradient-warm hover:opacity-90 shadow-coral text-primary-foreground self-start"
+            >
+              <Zap className="h-4 w-4" />
+              اعتمد الآمنة دفعة واحدة
+            </Button>
+          )}
+        </div>
+      </header>
+
+      {/* 🚨 Red flags — sits right under hero for urgency */}
       <RedFlagsAlert />
 
-      {/* Tabbed shell — keeps surface clean */}
-      <Tabs defaultValue="overview" dir="rtl" className="space-y-4">
-        <TabsList className="grid grid-cols-3 w-full bg-secondary/60 rounded-xl p-1 h-auto gap-1">
+      {/* Tabbed shell */}
+      <Tabs defaultValue="overview" dir="rtl" className="space-y-6">
+        <TabsList className="grid grid-cols-3 w-full max-w-xl bg-secondary/60 rounded-xl p-1 h-auto gap-1">
           <TabsTrigger value="overview" className="rounded-lg gap-1.5 text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm">
             <LayoutDashboard className="h-3.5 w-3.5" /> نظرة عامة
           </TabsTrigger>
@@ -63,49 +104,20 @@ export function ManagerView() {
           </TabsTrigger>
         </TabsList>
 
-        {/* OVERVIEW: integrated hero + pending list + agent activity */}
-        <TabsContent value="overview" className="space-y-4 m-0">
-          {/* Integrated header: hero merges directly into the approvals card */}
+        {/* OVERVIEW */}
+        <TabsContent value="overview" className="space-y-6 m-0">
           <div className="bento-card p-0 overflow-hidden">
-            <div className="px-6 md:px-8 py-7 md:py-8 bg-gradient-hero border-b border-border">
-              <div className="flex items-start justify-between gap-5 flex-wrap">
-                <div className="flex-1 min-w-[260px] space-y-3">
-                  <p className="text-sm text-muted-foreground">صباح الخير، م. عبدالله</p>
-                  <h2 className="text-3xl md:text-4xl font-black tracking-tight leading-[1.15]">
-                    لديك <span className="text-primary num">{pendingCount}</span> طلبات
-                    <br className="hidden sm:block" />
-                    بانتظار قرارك اليوم
-                  </h2>
-                  <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
-                    راجعتُ كل طلب، طبّقتُ السياسات، وأعددتُ توصيتي لكل حالة — لتقرّر بثقة في ثوانٍ بدلاً من ساعات.
-                  </p>
-                  <div className="flex items-center gap-2 pt-1 flex-wrap">
-                    {safeCount > 0 && (
-                      <span className="chip bg-success-soft text-success">
-                        <Check className="h-3 w-3" />
-                        <span className="num">{safeCount}</span> آمن للاعتماد
-                      </span>
-                    )}
-                    {reviewCount > 0 && (
-                      <span className="chip bg-warning-soft text-warning">
-                        <span className="num">{reviewCount}</span> يحتاج مراجعتك
-                      </span>
-                    )}
-                  </div>
-                </div>
-                {safeCount > 0 && (
-                  <Button
-                    onClick={handleBulkAutoApprove}
-                    size="lg"
-                    className="rounded-full gap-2 bg-gradient-warm hover:opacity-90 shadow-coral text-primary-foreground self-start"
-                  >
-                    <Zap className="h-4 w-4" />
-                    اعتمد الآمنة دفعة واحدة
-                  </Button>
-                )}
+            <div className="px-6 py-5 border-b border-border flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <h3 className="text-base font-bold">طلبات بانتظار قرارك</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  مرتّبة حسب الأولوية والتوصية
+                </p>
               </div>
+              <span className="chip bg-secondary text-foreground text-[11px]">
+                <span className="num">{pendingCount}</span> طلبات نشطة
+              </span>
             </div>
-
             {requests.length === 0 ? (
               <div className="p-12 text-center space-y-3">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success-soft">
@@ -130,11 +142,11 @@ export function ManagerView() {
           <AgentActivityFeed activities={managerAgentActivity} />
         </TabsContent>
 
-        {/* ANALYTICS: ROI + Sentiment + contextual KPIs */}
-        <TabsContent value="analytics" className="space-y-4 m-0">
+        {/* ANALYTICS */}
+        <TabsContent value="analytics" className="space-y-6 m-0">
           <ROITracker />
           <SentimentRadar />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InsightCard
               label="معدل الموافقة الأسبوعي"
               value="١٢"
@@ -153,8 +165,8 @@ export function ManagerView() {
           </div>
         </TabsContent>
 
-        {/* GOVERNANCE: rules */}
-        <TabsContent value="governance" className="space-y-4 m-0">
+        {/* GOVERNANCE */}
+        <TabsContent value="governance" className="space-y-6 m-0">
           <AutoApprovalRules />
         </TabsContent>
       </Tabs>

@@ -15,56 +15,53 @@ export function RedFlagsAlert() {
   const critical = items.filter((i) => i.severity === "critical").length;
 
   return (
-    <div className="relative rounded-2xl overflow-hidden shadow-[0_8px_32px_-8px_hsl(var(--destructive)/0.45)] ring-2 ring-destructive/60 ring-offset-2 ring-offset-background animate-fade-up">
-      {/* Right-edge urgency bar (RTL) */}
-      <div className="absolute right-0 top-0 bottom-0 w-1.5 bg-destructive" />
-      {/* Faint gradient backdrop */}
-      <div className="absolute inset-0 bg-gradient-to-l from-destructive/15 via-destructive/5 to-transparent pointer-events-none" />
+    <div className="relative rounded-2xl overflow-hidden border border-destructive/20 bg-card shadow-[0_4px_24px_-12px_hsl(var(--destructive)/0.25)] animate-fade-up">
+      {/* Soft right-edge urgency accent (RTL) */}
+      <div className="absolute right-0 top-0 bottom-0 w-1 bg-destructive/70" />
+      {/* Subtle tint */}
+      <div className="absolute inset-0 bg-gradient-to-l from-destructive/[0.04] to-transparent pointer-events-none" />
 
-      <div className="relative bg-card/95 backdrop-blur-sm">
+      <div className="relative">
         <button
           onClick={() => setOpen((v) => !v)}
-          className="w-full px-5 py-4 flex items-center justify-between gap-3 hover:bg-destructive/5 transition-colors"
+          className="w-full px-6 py-5 flex items-center justify-between gap-4 hover:bg-destructive/[0.03] transition-colors"
         >
-          <div className="flex items-center gap-3.5 min-w-0">
-            <div className="relative shrink-0">
-              <span className="absolute inset-0 rounded-2xl bg-destructive/40 animate-ping" />
-              <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-destructive shadow-lg">
-                <Siren className="h-5 w-5 text-destructive-foreground" strokeWidth={2.5} />
-              </div>
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-destructive/10 text-destructive shrink-0">
+              <Siren className="h-5 w-5" strokeWidth={2.25} />
             </div>
             <div className="text-right min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="chip bg-destructive text-destructive-foreground text-[10px] font-bold tracking-wide uppercase">
+                <span className="chip bg-destructive/10 text-destructive text-[10px] font-semibold tracking-wide">
                   تنبيه عاجل
                 </span>
-                <p className="text-base font-black text-destructive leading-tight">
-                  حالات حساسة تتطلب تدخلك الطارئ
+                <p className="text-base font-bold text-foreground leading-tight">
+                  حالات حساسة تتطلب تدخلك
                 </p>
               </div>
-              <p className="text-xs text-foreground/80 mt-1">
-                <span className="num font-bold">{items.length}</span> حالة بانتظارك —
+              <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                <span className="num font-semibold text-foreground">{items.length}</span> حالة بانتظارك،
                 {" "}
-                <span className="num font-black text-destructive">{critical}</span> منها حرجة لا تحتمل التأجيل.
+                منها <span className="num font-semibold text-destructive">{critical}</span> حرجة.
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <span className="hidden sm:inline-flex chip bg-destructive/10 text-destructive text-[10px] font-bold">
+            <span className="hidden sm:inline-flex chip bg-secondary text-muted-foreground text-[10px] font-medium">
               {open ? "إخفاء" : "عرض الحالات"}
             </span>
             {open ? (
-              <ChevronUp className="h-5 w-5 text-destructive" />
+              <ChevronUp className="h-4 w-4 text-muted-foreground" />
             ) : (
-              <ChevronDown className="h-5 w-5 text-destructive" />
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
             )}
           </div>
         </button>
 
         {open && (
-          <div className="divide-y divide-destructive/15 border-t-2 border-destructive/30 animate-fade-up">
+          <div className="divide-y divide-border border-t border-border animate-fade-up bg-secondary/20">
             {items.map((f) => (
-              <div key={f.id} className="p-4 bg-card">
+              <div key={f.id} className="p-5 bg-card/60 hover:bg-card transition-colors">
                 <div className="flex items-start gap-3">
                   <div
                     className={cn(

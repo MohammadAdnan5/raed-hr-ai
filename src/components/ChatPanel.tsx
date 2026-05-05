@@ -39,7 +39,7 @@ export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenP
       id: "welcome",
       role: "agent",
       content:
-        "أهلاً عبدالله 👋 أنا وكيلك الذكي للموارد البشرية. لا أكتفي بالإجابة — أُخطّط، أتحقق من السياسات، وأنفّذ الإجراءات نيابةً عنك بأمان.",
+        "أهلاً خالد 👋 أنا وكيلك الذكي للموارد البشرية. لا أكتفي بالإجابة — أُخطّط، أتحقق من السياسات، وأنفّذ الإجراءات نيابةً عنك بأمان.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -227,7 +227,7 @@ function MessageBubble({
           isUser ? "bg-secondary text-foreground" : "bg-gradient-warm text-primary-foreground"
         )}
       >
-        {isUser ? "أ" : <Sparkles className="h-3.5 w-3.5" />}
+        {isUser ? "خ" : <Sparkles className="h-3.5 w-3.5" />}
       </div>
       <div className={cn("flex flex-col gap-1.5 max-w-[85%] min-w-0", isUser && "items-end")}>
         {message.content && (
