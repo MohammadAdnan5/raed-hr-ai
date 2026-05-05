@@ -59,9 +59,9 @@ export function RedFlagsAlert() {
         </button>
 
         {open && (
-          <div className="divide-y divide-destructive/15 border-t-2 border-destructive/30 animate-fade-up">
+          <div className="divide-y divide-border border-t border-border animate-fade-up bg-secondary/20">
             {items.map((f) => (
-              <div key={f.id} className="p-4 bg-card">
+              <div key={f.id} className="p-5 bg-card/60 hover:bg-card transition-colors">
                 <div className="flex items-start gap-3">
                   <div
                     className={cn(
