@@ -76,19 +76,8 @@ function IndexInner() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2 order-2 lg:order-1">
-              <ManagerView />
-            </div>
-            <aside className="lg:col-span-1 order-1 lg:order-2 lg:sticky lg:top-20 lg:h-[calc(100vh-6rem)]">
-              <ChatPanel
-                onOpenLeave={() => setLeaveOpen(true)}
-                onOpenDocument={() => setDocOpen(true)}
-                onOpenPolicies={() => setPoliciesOpen(true)}
-                onOpenPayslip={() => setPayslipOpen(true)}
-                onOpenSimulator={() => setSimOpen(true)}
-              />
-            </aside>
+          <div className="mx-auto max-w-6xl">
+            <ManagerView />
           </div>
         )}
       </main>
