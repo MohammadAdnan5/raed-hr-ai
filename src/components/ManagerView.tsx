@@ -45,53 +45,12 @@ export function ManagerView() {
   const reviewCount = requests.filter((r) => r.aiRecommendation === "review").length;
 
   return (
-    <div className="space-y-6 md:space-y-8">
-      {/* 🌅 HERO — always at the absolute top, anchors the page */}
-      <header className="relative overflow-hidden rounded-3xl border border-border bg-gradient-hero px-6 md:px-10 py-8 md:py-10">
-        <div className="absolute inset-0 pointer-events-none opacity-60 bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.08),transparent_60%)]" />
-        <div className="relative flex items-start justify-between gap-6 flex-wrap">
-          <div className="flex-1 min-w-[280px] space-y-4">
-            <p className="text-sm text-muted-foreground">صباح الخير، م. عبدالله</p>
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.1]">
-              لديك <span className="text-primary num">{pendingCount}</span> طلبات
-              <br className="hidden sm:block" />
-              بانتظار قرارك اليوم
-            </h2>
-            <p className="text-sm md:text-base text-muted-foreground leading-relaxed max-w-2xl">
-              راجعتُ كل طلب، طبّقتُ السياسات، وأعددتُ توصيتي لكل حالة — لتقرّر بثقة في ثوانٍ بدلاً من ساعات.
-            </p>
-            <div className="flex items-center gap-2 pt-1 flex-wrap">
-              {safeCount > 0 && (
-                <span className="chip bg-success-soft text-success">
-                  <Check className="h-3 w-3" />
-                  <span className="num">{safeCount}</span> آمن للاعتماد
-                </span>
-              )}
-              {reviewCount > 0 && (
-                <span className="chip bg-warning-soft text-warning">
-                  <span className="num">{reviewCount}</span> يحتاج مراجعتك
-                </span>
-              )}
-            </div>
-          </div>
-          {safeCount > 0 && (
-            <Button
-              onClick={handleBulkAutoApprove}
-              size="lg"
-              className="rounded-full gap-2 bg-gradient-warm hover:opacity-90 shadow-coral text-primary-foreground self-start"
-            >
-              <Zap className="h-4 w-4" />
-              اعتمد الآمنة دفعة واحدة
-            </Button>
-          )}
-        </div>
-      </header>
-
-      {/* 🚨 Red flags — sits right under hero for urgency */}
-      <RedFlagsAlert />
+    <div className="space-y-5">
+      {/* 🚨 Top alert banner — catches eye without breaking flow */}
+      <RedFlagsAlert variant="banner" />
 
       {/* Tabbed shell */}
-      <Tabs defaultValue="overview" dir="rtl" className="space-y-6">
+      <Tabs defaultValue="overview" dir="rtl" className="space-y-5">
         <TabsList className="grid grid-cols-3 w-full max-w-xl bg-secondary/60 rounded-xl p-1 h-auto gap-1">
           <TabsTrigger value="overview" className="rounded-lg gap-1.5 text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm">
             <LayoutDashboard className="h-3.5 w-3.5" /> نظرة عامة
@@ -104,30 +63,68 @@ export function ManagerView() {
           </TabsTrigger>
         </TabsList>
 
-        {/* OVERVIEW */}
-        <TabsContent value="overview" className="space-y-6 m-0">
-          <div className="bento-card p-0 overflow-hidden">
-            <div className="px-6 py-5 border-b border-border flex items-center justify-between gap-3 flex-wrap">
+        {/* OVERVIEW — hero + approvals fused into a single cohesive surface */}
+        <TabsContent value="overview" className="space-y-5 m-0">
+          <section className="rounded-3xl border border-border bg-card overflow-hidden shadow-[0_1px_2px_hsl(var(--foreground)/0.04),0_8px_32px_-16px_hsl(var(--primary)/0.12)]">
+            {/* Hero — anchors directly above the list */}
+            <header className="relative overflow-hidden bg-gradient-hero px-6 md:px-8 pt-6 pb-5 border-b border-border">
+              <div className="absolute inset-0 pointer-events-none opacity-60 bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.10),transparent_60%)]" />
+              <div className="relative flex items-end justify-between gap-6 flex-wrap">
+                <div className="flex-1 min-w-[280px]">
+                  <p className="text-xs font-medium text-muted-foreground tracking-wide">صباح الخير، م. عبدالله</p>
+                  <h2 className="mt-1.5 text-2xl md:text-4xl font-black tracking-tight leading-[1.15]">
+                    لديك <span className="text-primary num">{pendingCount}</span> طلبات بانتظار قرارك
+                  </h2>
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-2xl">
+                    راجعتُ كل طلب وأعددتُ توصيتي — قرّر بثقة في ثوانٍ.
+                  </p>
+                  <div className="mt-3 flex items-center gap-2 flex-wrap">
+                    {safeCount > 0 && (
+                      <span className="chip bg-success-soft text-success">
+                        <Check className="h-3 w-3" />
+                        <span className="num">{safeCount}</span> آمن للاعتماد
+                      </span>
+                    )}
+                    {reviewCount > 0 && (
+                      <span className="chip bg-warning-soft text-warning">
+                        <span className="num">{reviewCount}</span> يحتاج مراجعتك
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {safeCount > 0 && (
+                  <Button
+                    onClick={handleBulkAutoApprove}
+                    size="lg"
+                    className="rounded-full gap-2 bg-gradient-warm hover:opacity-90 shadow-coral text-primary-foreground"
+                  >
+                    <Zap className="h-4 w-4" />
+                    اعتمد الآمنة دفعة واحدة
+                  </Button>
+                )}
+              </div>
+            </header>
+
+            {/* Approvals list — fused directly below hero */}
+            <div className="px-6 md:px-8 pt-4 pb-2 flex items-center justify-between gap-3 flex-wrap">
               <div>
-                <h3 className="text-base font-bold">طلبات بانتظار قرارك</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  مرتّبة حسب الأولوية والتوصية
-                </p>
+                <h3 className="text-sm font-bold">طلبات بانتظار قرارك</h3>
+                <p className="text-[11px] text-muted-foreground mt-0.5">مرتّبة حسب الأولوية والتوصية</p>
               </div>
               <span className="chip bg-secondary text-foreground text-[11px]">
-                <span className="num">{pendingCount}</span> طلبات نشطة
+                <span className="num">{pendingCount}</span> نشطة
               </span>
             </div>
             {requests.length === 0 ? (
-              <div className="p-12 text-center space-y-3">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success-soft">
-                  <Check className="h-7 w-7 text-success" strokeWidth={3} />
+              <div className="p-10 text-center space-y-2">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-success-soft">
+                  <Check className="h-6 w-6 text-success" strokeWidth={3} />
                 </div>
                 <p className="text-sm font-semibold">أنجزتَ كل شيء!</p>
                 <p className="text-xs text-muted-foreground">لا توجد طلبات معلقة حالياً.</p>
               </div>
             ) : (
-              <div className="divide-y divide-border">
+              <div className="divide-y divide-border border-t border-border mt-2">
                 {requests.map((req) => (
                   <ApprovalCard
                     key={req.id}
@@ -138,12 +135,13 @@ export function ManagerView() {
                 ))}
               </div>
             )}
-          </div>
+          </section>
+
           <AgentActivityFeed activities={managerAgentActivity} />
         </TabsContent>
 
         {/* ANALYTICS */}
-        <TabsContent value="analytics" className="space-y-6 m-0">
+        <TabsContent value="analytics" className="space-y-5 m-0">
           <ROITracker />
           <SentimentRadar />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -166,7 +164,7 @@ export function ManagerView() {
         </TabsContent>
 
         {/* GOVERNANCE */}
-        <TabsContent value="governance" className="space-y-6 m-0">
+        <TabsContent value="governance" className="space-y-5 m-0">
           <AutoApprovalRules />
         </TabsContent>
       </Tabs>

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
-export function RedFlagsAlert() {
+export function RedFlagsAlert({ variant = "card" }: { variant?: "card" | "banner" } = {}) {
   const [open, setOpen] = useState(false);
   const [items] = useState(redFlags);
   const { toast } = useToast();
@@ -13,42 +13,52 @@ export function RedFlagsAlert() {
   if (items.length === 0) return null;
 
   const critical = items.filter((i) => i.severity === "critical").length;
+  const isBanner = variant === "banner";
 
   return (
-    <div className="relative rounded-2xl overflow-hidden border border-destructive/20 bg-card shadow-[0_4px_24px_-12px_hsl(var(--destructive)/0.25)] animate-fade-up">
-      {/* Soft right-edge urgency accent (RTL) */}
-      <div className="absolute right-0 top-0 bottom-0 w-1 bg-destructive/70" />
-      {/* Subtle tint */}
-      <div className="absolute inset-0 bg-gradient-to-l from-destructive/[0.04] to-transparent pointer-events-none" />
+    <div
+      className={cn(
+        "relative overflow-hidden border border-destructive/25 animate-fade-up",
+        isBanner
+          ? "rounded-xl bg-destructive/[0.04]"
+          : "rounded-2xl bg-card shadow-[0_4px_24px_-12px_hsl(var(--destructive)/0.25)]"
+      )}
+    >
+      <div className={cn("absolute right-0 top-0 bottom-0 bg-destructive/70", isBanner ? "w-[3px]" : "w-1")} />
+      {!isBanner && (
+        <div className="absolute inset-0 bg-gradient-to-l from-destructive/[0.04] to-transparent pointer-events-none" />
+      )}
 
       <div className="relative">
         <button
           onClick={() => setOpen((v) => !v)}
-          className="w-full px-6 py-5 flex items-center justify-between gap-4 hover:bg-destructive/[0.03] transition-colors"
+          className={cn(
+            "w-full flex items-center justify-between gap-4 hover:bg-destructive/[0.05] transition-colors",
+            isBanner ? "px-4 py-2.5" : "px-6 py-5"
+          )}
         >
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-destructive/10 text-destructive shrink-0">
-              <Siren className="h-5 w-5" strokeWidth={2.25} />
+          <div className="flex items-center gap-3 min-w-0">
+            <div className={cn("flex items-center justify-center rounded-xl bg-destructive/10 text-destructive shrink-0", isBanner ? "h-8 w-8" : "h-11 w-11 rounded-2xl")}>
+              <Siren className={isBanner ? "h-4 w-4" : "h-5 w-5"} strokeWidth={2.25} />
             </div>
-            <div className="text-right min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="chip bg-destructive/10 text-destructive text-[10px] font-semibold tracking-wide">
-                  تنبيه عاجل
-                </span>
-                <p className="text-base font-bold text-foreground leading-tight">
-                  حالات حساسة تتطلب تدخلك
-                </p>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-                <span className="num font-semibold text-foreground">{items.length}</span> حالة بانتظارك،
-                {" "}
-                منها <span className="num font-semibold text-destructive">{critical}</span> حرجة.
+            <div className="text-right min-w-0 flex items-center gap-2 flex-wrap">
+              <span className="chip bg-destructive text-destructive-foreground text-[10px] font-bold tracking-wide">
+                تنبيه عاجل
+              </span>
+              <p className={cn("font-bold text-foreground leading-tight", isBanner ? "text-sm" : "text-base")}>
+                حالات حساسة تتطلب تدخلك
               </p>
+              <span className="text-xs text-muted-foreground">
+                <span className="num font-semibold text-foreground">{items.length}</span> حالة
+                {critical > 0 && (
+                  <> · <span className="num font-semibold text-destructive">{critical}</span> حرجة</>
+                )}
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <span className="hidden sm:inline-flex chip bg-secondary text-muted-foreground text-[10px] font-medium">
-              {open ? "إخفاء" : "عرض الحالات"}
+            <span className="hidden sm:inline-flex chip bg-card text-muted-foreground text-[10px] font-medium border border-border">
+              {open ? "إخفاء" : "عرض"}
             </span>
             {open ? (
               <ChevronUp className="h-4 w-4 text-muted-foreground" />
