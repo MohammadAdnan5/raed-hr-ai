@@ -35,18 +35,20 @@ const suggestions = [
   { icon: Sparkles, text: "ما هي مزايا التأمين الصحي؟" },
 ];
 
-export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenPayslip, onOpenSimulator }: ChatPanelProps) {
+export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenPayslip, onOpenSimulator, onIssueSalaryLetter }: ChatPanelProps) {
   const [listening, setListening] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
       role: "agent",
       content:
-        "أهلاً خالد 👋 أنا وكيلك الذكي للموارد البشرية. لا أكتفي بالإجابة — أُخطّط، أتحقق من السياسات، وأنفّذ الإجراءات نيابةً عنك بأمان.",
+        "أهلاً خالد 👋 أنا وكيلك الذكي للموارد البشرية. لا أكتفي بالإجابة — أسأل، أتحقق من السياسات، ثم أُنجز الإجراءات نيابةً عنك بأمان.",
     },
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  // pending follow-up: when set, the next user message is treated as the answer
+  const [pendingFollowUp, setPendingFollowUp] = useState<null | "salary_recipient">(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
