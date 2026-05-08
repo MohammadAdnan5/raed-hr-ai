@@ -23,7 +23,10 @@ interface ChatPanelProps {
   onOpenPolicies?: () => void;
   onOpenPayslip?: () => void;
   onOpenSimulator?: () => void;
+  onIssueSalaryLetter?: (recipient: string) => void;
 }
+
+const EMPLOYEE_EMAIL = "m.adnan@PSAU.SA";
 
 const suggestions = [
   { icon: Calendar, text: "أريد تقديم إجازة سنوية" },
@@ -32,18 +35,20 @@ const suggestions = [
   { icon: Sparkles, text: "ما هي مزايا التأمين الصحي؟" },
 ];
 
-export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenPayslip, onOpenSimulator }: ChatPanelProps) {
+export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenPayslip, onOpenSimulator, onIssueSalaryLetter }: ChatPanelProps) {
   const [listening, setListening] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
       role: "agent",
       content:
-        "أهلاً خالد 👋 أنا وكيلك الذكي للموارد البشرية. لا أكتفي بالإجابة — أُخطّط، أتحقق من السياسات، وأنفّذ الإجراءات نيابةً عنك بأمان.",
+        "أهلاً خالد 👋 أنا وكيلك الذكي للموارد البشرية. لا أكتفي بالإجابة — أسأل، أتحقق من السياسات، ثم أُنجز الإجراءات نيابةً عنك بأمان.",
     },
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  // pending follow-up: when set, the next user message is treated as the answer
+  const [pendingFollowUp, setPendingFollowUp] = useState<null | "salary_recipient">(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -65,11 +70,41 @@ export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenP
     setIsTyping(true);
 
     setTimeout(() => {
+      // Handle pending follow-up answer (e.g., recipient for salary letter)
+      if (pendingFollowUp === "salary_recipient") {
+        setPendingFollowUp(null);
+        const recipient = content;
+        const plan: TPlan = {
+          id: "plan-salary",
+          goal: "إصدار خطاب تعريف بالراتب",
+          context: `موجه إلى: ${recipient}`,
+          steps: [
+            { id: "s1", label: "جلب بيانات التوظيف من النظام", status: "done" },
+            { id: "s2", label: `تطبيق القالب المعتمد لـ ${recipient}`, status: "done" },
+            { id: "s3", label: "إنشاء المسودة", status: "active" },
+            { id: "s4", label: "التوقيع الرقمي من HR", status: "pending" },
+            { id: "s5", label: `إرسال نسخة إلى بريدك (${EMPLOYEE_EMAIL})`, status: "needs_approval", detail: "يحتاج تأكيدك للإرسال" },
+          ],
+        };
+        setMessages((m) => [
+          ...m,
+          {
+            id: `a-${Date.now()}`,
+            role: "agent",
+            content: `تمام — سأُصدر خطاب تعريف بالراتب موجهاً إلى ${recipient}:`,
+            plan: { ...plan, _recipient: recipient } as TPlan & { _recipient: string },
+          },
+        ]);
+        setIsTyping(false);
+        return;
+      }
+
       const reply = generateReply(content, {
         onOpenLeave,
         onOpenDocument,
         onOpenPolicies,
         onOpenPayslip,
+        onAskSalaryRecipient: () => setPendingFollowUp("salary_recipient"),
         onPlanApprove: (planId) => {
           toast({
             title: "نفّذ الوكيل الإجراء",
@@ -95,7 +130,7 @@ export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenP
           <p className="text-sm font-bold">وكيل الموارد البشرية الذكي</p>
           <p className="text-xs text-muted-foreground flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-success" />
-            يخطط · يتحقق · ينفّذ
+            اسأل · تحقّق · أنجز
           </p>
         </div>
         <span className="chip bg-background/70 border border-border text-[10px] text-muted-foreground shrink-0">
@@ -111,6 +146,19 @@ export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenP
             message={msg}
             onPlanApprove={() => {
               if (!msg.plan) return;
+              if (msg.plan.id === "plan-salary") {
+                const recipient = (msg.plan as TPlan & { _recipient?: string })._recipient || "—";
+                onIssueSalaryLetter?.(recipient);
+                setMessages((m) => [
+                  ...m,
+                  {
+                    id: `a-done-${Date.now()}`,
+                    role: "agent",
+                    content: `✅ تم إصدار خطاب تعريف بالراتب موجهاً إلى ${recipient}، ووقّعتُه رقمياً، وأرسلتُ نسخة إلى بريدك ${EMPLOYEE_EMAIL}. تجده الآن في "وثائقي".`,
+                  },
+                ]);
+                return;
+              }
               toast({
                 title: "نفّذ الوكيل الإجراء",
                 description: "أكملتُ الخطوات المتبقية بأمان وأشعرتُ الأطراف المعنية.",
@@ -156,7 +204,7 @@ export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenP
                 toast({ title: "🎙️ ابدأ التحدث", description: "أستمع إليك الآن (تجريبي)..." });
                 setTimeout(() => {
                   setListening(false);
-                  setInput("أحتاج خطاب تعريف بالراتب موجه للبنك الأهلي");
+                  setInput("أحتاج خطاب تعريف بالراتب");
                   toast({ title: "تم التقاط طلبك", description: "راجعه ثم أرسله." });
                 }, 1800);
               }
@@ -309,6 +357,7 @@ function generateReply(
     onOpenDocument: () => void;
     onOpenPolicies?: () => void;
     onOpenPayslip?: () => void;
+    onAskSalaryRecipient?: () => void;
     onPlanApprove: (planId: string) => void;
   }
 ): ChatMessage {
@@ -343,11 +392,21 @@ function generateReply(
       actions: handlers.onOpenPayslip ? [{ label: "افتح كشف الراتب", onClick: handlers.onOpenPayslip }] : undefined,
     };
   }
-  if (q.includes("خطاب") || q.includes("وثيقة") || q.includes("شهادة") || q.includes("تعريف") || q.includes("تأييد") || q.includes("تاييد")) {
+  // Salary letter — ask follow-up for recipient first
+  if ((q.includes("تعريف") || q.includes("خطاب")) && (q.includes("راتب") || q.includes("بالراتب"))) {
+    handlers.onAskSalaryRecipient?.();
     return {
       id,
       role: "agent",
-      content: "تمام، سأتولى إصدار الخطاب خطوة بخطوة:",
+      content:
+        "بكل سرور — قبل أن أُصدر الخطاب، إلى أي جهة تريد توجيهه؟ (مثال: البنك الأهلي، السفارة الأمريكية، شركة أرامكو…)",
+    };
+  }
+  if (q.includes("خطاب") || q.includes("وثيقة") || q.includes("شهادة") || q.includes("تأييد") || q.includes("تاييد")) {
+    return {
+      id,
+      role: "agent",
+      content: "تمام، سأتولى إصدار الوثيقة خطوة بخطوة:",
       plan: samplePlans.document,
     };
   }

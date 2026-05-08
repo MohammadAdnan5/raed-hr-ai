@@ -18,6 +18,19 @@ const statusChip: Record<TrackedDocument["status"], { label: string; cls: string
   delivered: { label: "تم التسليم", cls: "bg-secondary text-muted-foreground" },
 };
 
+// Quick service-scope hints per document type — to give viewers
+// a sense of breadth of what the agent can issue.
+const docExamples: { match: (t: string) => boolean; example: string }[] = [
+  { match: (t) => t.includes("راتب") || t.includes("تعريف"), example: "مثال: موجه إلى البنك الأهلي لفتح حساب أو تمويل عقاري" },
+  { match: (t) => t.includes("خبرة"), example: "مثال: شهادة خبرة لـ ٣ سنوات للتقديم على وظيفة جديدة" },
+  { match: (t) => t.includes("تأشيرة") || t.includes("خروج") || t.includes("عودة"), example: "مثال: تأشيرة خروج وعودة لإجازة عائلية إلى تركيا" },
+  { match: (t) => t.includes("ممانعة") || t.includes("عدم"), example: "مثال: خطاب عدم ممانعة لاستخراج رخصة عمل حر" },
+  { match: (t) => t.includes("كشف") || t.includes("رواتب"), example: "مثال: كشف رواتب آخر ٣ شهور للسفارة الأمريكية" },
+  { match: (t) => t.includes("عمل") || t.includes("شهادة"), example: "مثال: شهادة على رأس العمل لجهة حكومية" },
+];
+const getDocExample = (type: string) =>
+  docExamples.find((d) => d.match(type))?.example;
+
 export function DocumentTrackerDialog({ open, onOpenChange, docs }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { toast } = useToast();
@@ -69,6 +82,11 @@ export function DocumentTrackerDialog({ open, onOpenChange, docs }: Props) {
                       </div>
                       <span className={cn("chip shrink-0", cfg.cls)}>{cfg.label}</span>
                     </div>
+                    {getDocExample(d.type) && (
+                      <p className="text-[11px] text-primary/80 mt-1 leading-relaxed">
+                        {getDocExample(d.type)}
+                      </p>
+                    )}
                     <p className="text-[11px] text-muted-foreground mt-1.5 num">{d.id} · {d.requestedAt}</p>
                   </button>
                 );

@@ -14,6 +14,7 @@ import { RoleProvider, useRole } from "@/context/RoleContext";
 import { initialTrackedDocs, TrackedDocument } from "@/data/hrData";
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 function IndexInner() {
   const { role } = useRole();
@@ -71,6 +72,27 @@ function IndexInner() {
                   onOpenPolicies={() => setPoliciesOpen(true)}
                   onOpenPayslip={() => setPayslipOpen(true)}
                   onOpenSimulator={() => setSimOpen(true)}
+                  onIssueSalaryLetter={(recipient) => {
+                    const newDoc: TrackedDocument = {
+                      id: `DOC-${Math.floor(2050 + Math.random() * 50)}`,
+                      type: "خطاب تعريف بالراتب",
+                      recipient,
+                      requestedAt: "الآن",
+                      status: "ready",
+                      steps: [
+                        { label: "استلام الطلب", done: true, time: "الآن" },
+                        { label: "التحقق من البيانات", done: true, time: "الآن" },
+                        { label: "تطبيق القالب المعتمد", done: true, time: "الآن" },
+                        { label: "التوقيع الرقمي من HR", done: true, time: "الآن" },
+                        { label: "إرسال نسخة لبريدك", done: true, time: "الآن" },
+                      ],
+                    };
+                    addTrackedDoc(newDoc);
+                    toast({
+                      title: "✉️ أُرسل الخطاب إلى بريدك",
+                      description: `تم إرسال خطاب تعريف بالراتب (${recipient}) إلى m.adnan@PSAU.SA`,
+                    });
+                  }}
                 />
               </aside>
             </div>
