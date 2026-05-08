@@ -82,6 +82,11 @@ export function DocumentTrackerDialog({ open, onOpenChange, docs }: Props) {
                       </div>
                       <span className={cn("chip shrink-0", cfg.cls)}>{cfg.label}</span>
                     </div>
+                    {getDocExample(d.type) && (
+                      <p className="text-[11px] text-primary/80 mt-1 leading-relaxed">
+                        {getDocExample(d.type)}
+                      </p>
+                    )}
                     <p className="text-[11px] text-muted-foreground mt-1.5 num">{d.id} · {d.requestedAt}</p>
                   </button>
                 );
