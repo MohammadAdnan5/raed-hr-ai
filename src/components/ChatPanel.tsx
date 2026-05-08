@@ -23,7 +23,10 @@ interface ChatPanelProps {
   onOpenPolicies?: () => void;
   onOpenPayslip?: () => void;
   onOpenSimulator?: () => void;
+  onIssueSalaryLetter?: (recipient: string) => void;
 }
+
+const EMPLOYEE_EMAIL = "m.adnan@PSAU.SA";
 
 const suggestions = [
   { icon: Calendar, text: "أريد تقديم إجازة سنوية" },
