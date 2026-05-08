@@ -130,7 +130,7 @@ export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenP
           <p className="text-sm font-bold">وكيل الموارد البشرية الذكي</p>
           <p className="text-xs text-muted-foreground flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-success" />
-            يخطط · يتحقق · ينفّذ
+            اسأل · تحقّق · أنجز
           </p>
         </div>
         <span className="chip bg-background/70 border border-border text-[10px] text-muted-foreground shrink-0">
