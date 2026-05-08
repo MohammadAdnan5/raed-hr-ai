@@ -70,11 +70,41 @@ export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenP
     setIsTyping(true);
 
     setTimeout(() => {
+      // Handle pending follow-up answer (e.g., recipient for salary letter)
+      if (pendingFollowUp === "salary_recipient") {
+        setPendingFollowUp(null);
+        const recipient = content;
+        const plan: TPlan = {
+          id: "plan-salary",
+          goal: "إصدار خطاب تعريف بالراتب",
+          context: `موجه إلى: ${recipient}`,
+          steps: [
+            { id: "s1", label: "جلب بيانات التوظيف من النظام", status: "done" },
+            { id: "s2", label: `تطبيق القالب المعتمد لـ ${recipient}`, status: "done" },
+            { id: "s3", label: "إنشاء المسودة", status: "active" },
+            { id: "s4", label: "التوقيع الرقمي من HR", status: "pending" },
+            { id: "s5", label: `إرسال نسخة إلى بريدك (${EMPLOYEE_EMAIL})`, status: "needs_approval", detail: "يحتاج تأكيدك للإرسال" },
+          ],
+        };
+        setMessages((m) => [
+          ...m,
+          {
+            id: `a-${Date.now()}`,
+            role: "agent",
+            content: `تمام — سأُصدر خطاب تعريف بالراتب موجهاً إلى ${recipient}:`,
+            plan: { ...plan, _recipient: recipient } as TPlan & { _recipient: string },
+          },
+        ]);
+        setIsTyping(false);
+        return;
+      }
+
       const reply = generateReply(content, {
         onOpenLeave,
         onOpenDocument,
         onOpenPolicies,
         onOpenPayslip,
+        onAskSalaryRecipient: () => setPendingFollowUp("salary_recipient"),
         onPlanApprove: (planId) => {
           toast({
             title: "نفّذ الوكيل الإجراء",
