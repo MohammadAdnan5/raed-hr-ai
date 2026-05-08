@@ -191,7 +191,7 @@ export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenP
                 toast({ title: "🎙️ ابدأ التحدث", description: "أستمع إليك الآن (تجريبي)..." });
                 setTimeout(() => {
                   setListening(false);
-                  setInput("أحتاج خطاب تعريف بالراتب موجه للبنك الأهلي");
+                  setInput("أحتاج خطاب تعريف بالراتب");
                   toast({ title: "تم التقاط طلبك", description: "راجعه ثم أرسله." });
                 }, 1800);
               }
