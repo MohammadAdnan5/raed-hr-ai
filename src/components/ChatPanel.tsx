@@ -146,11 +146,13 @@ export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenP
             message={msg}
             onPlanApprove={() => {
               if (!msg.plan) return;
-              if (msg.plan.id === "plan-salary") {
+              const planId = msg.plan.id;
+              if (planId === "plan-salary") {
                 const recipient = (msg.plan as TPlan & { _recipient?: string })._recipient || "—";
                 onIssueSalaryLetter?.(recipient);
+                // Remove the plan card from the original message and append confirmation
                 setMessages((m) => [
-                  ...m,
+                  ...m.map((x) => (x.id === msg.id ? { ...x, plan: undefined, content: "" } : x)),
                   {
                     id: `a-done-${Date.now()}`,
                     role: "agent",
@@ -159,12 +161,16 @@ export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenP
                 ]);
                 return;
               }
+              // Generic: remove the plan card after approval
+              setMessages((m) =>
+                m.map((x) => (x.id === msg.id ? { ...x, plan: undefined } : x))
+              );
               toast({
                 title: "نفّذ الوكيل الإجراء",
                 description: "أكملتُ الخطوات المتبقية بأمان وأشعرتُ الأطراف المعنية.",
               });
-              if (msg.plan.id === "plan-leave") onOpenLeave();
-              if (msg.plan.id === "plan-doc") onOpenDocument();
+              if (planId === "plan-leave") onOpenLeave();
+              if (planId === "plan-doc") onOpenDocument();
             }}
             onPlanCancel={() => {
               setMessages((m) =>
