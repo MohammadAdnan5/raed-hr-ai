@@ -357,6 +357,7 @@ function generateReply(
     onOpenDocument: () => void;
     onOpenPolicies?: () => void;
     onOpenPayslip?: () => void;
+    onAskSalaryRecipient?: () => void;
     onPlanApprove: (planId: string) => void;
   }
 ): ChatMessage {
