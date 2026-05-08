@@ -72,7 +72,7 @@ function IndexInner() {
                   onOpenPolicies={() => setPoliciesOpen(true)}
                   onOpenPayslip={() => setPayslipOpen(true)}
                   onOpenSimulator={() => setSimOpen(true)}
-                  onIssueSalaryLetter={(recipient) => {
+                  onIssueSalaryLetter={async (recipient) => {
                     const newDoc: TrackedDocument = {
                       id: `DOC-${Math.floor(2050 + Math.random() * 50)}`,
                       type: "خطاب تعريف بالراتب",
@@ -88,10 +88,24 @@ function IndexInner() {
                       ],
                     };
                     addTrackedDoc(newDoc);
+                    const recipientEmail = "Alz3bei.mohammad2022@gmail.com";
                     toast({
                       title: "✉️ أُرسل الخطاب إلى بريدك",
-                      description: `تم إرسال خطاب تعريف بالراتب (${recipient}) إلى m.adnan@PSAU.SA`,
+                      description: `تم إرسال خطاب تعريف بالراتب (${recipient}) إلى ${recipientEmail}`,
                     });
+                    try {
+                      const { supabase } = await import("@/integrations/supabase/client");
+                      await supabase.functions.invoke("send-transactional-email", {
+                        body: {
+                          templateName: "salary-certificate-issued",
+                          recipientEmail,
+                          idempotencyKey: `salary-${newDoc.id}-${Date.now()}`,
+                          templateData: { recipient, employeeName: "خالد" },
+                        },
+                      });
+                    } catch (e) {
+                      console.error("Failed to send salary letter email", e);
+                    }
                   }}
                 />
               </aside>
