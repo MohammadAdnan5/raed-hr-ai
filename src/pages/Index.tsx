@@ -14,6 +14,7 @@ import { RoleProvider, useRole } from "@/context/RoleContext";
 import { initialTrackedDocs, TrackedDocument } from "@/data/hrData";
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
+import { toast } from "sonner";
 
 function IndexInner() {
   const { role } = useRole();
