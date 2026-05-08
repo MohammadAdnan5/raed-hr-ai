@@ -146,6 +146,19 @@ export function ChatPanel({ onOpenLeave, onOpenDocument, onOpenPolicies, onOpenP
             message={msg}
             onPlanApprove={() => {
               if (!msg.plan) return;
+              if (msg.plan.id === "plan-salary") {
+                const recipient = (msg.plan as TPlan & { _recipient?: string })._recipient || "—";
+                onIssueSalaryLetter?.(recipient);
+                setMessages((m) => [
+                  ...m,
+                  {
+                    id: `a-done-${Date.now()}`,
+                    role: "agent",
+                    content: `✅ تم إصدار خطاب تعريف بالراتب موجهاً إلى ${recipient}، ووقّعتُه رقمياً، وأرسلتُ نسخة إلى بريدك ${EMPLOYEE_EMAIL}. تجده الآن في "وثائقي".`,
+                  },
+                ]);
+                return;
+              }
               toast({
                 title: "نفّذ الوكيل الإجراء",
                 description: "أكملتُ الخطوات المتبقية بأمان وأشعرتُ الأطراف المعنية.",
