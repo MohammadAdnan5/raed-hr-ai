@@ -392,11 +392,21 @@ function generateReply(
       actions: handlers.onOpenPayslip ? [{ label: "افتح كشف الراتب", onClick: handlers.onOpenPayslip }] : undefined,
     };
   }
-  if (q.includes("خطاب") || q.includes("وثيقة") || q.includes("شهادة") || q.includes("تعريف") || q.includes("تأييد") || q.includes("تاييد")) {
+  // Salary letter — ask follow-up for recipient first
+  if ((q.includes("تعريف") || q.includes("خطاب")) && (q.includes("راتب") || q.includes("بالراتب"))) {
+    handlers.onAskSalaryRecipient?.();
     return {
       id,
       role: "agent",
-      content: "تمام، سأتولى إصدار الخطاب خطوة بخطوة:",
+      content:
+        "بكل سرور — قبل أن أُصدر الخطاب، إلى أي جهة تريد توجيهه؟ (مثال: البنك الأهلي، السفارة الأمريكية، شركة أرامكو…)",
+    };
+  }
+  if (q.includes("خطاب") || q.includes("وثيقة") || q.includes("شهادة") || q.includes("تأييد") || q.includes("تاييد")) {
+    return {
+      id,
+      role: "agent",
+      content: "تمام، سأتولى إصدار الوثيقة خطوة بخطوة:",
       plan: samplePlans.document,
     };
   }
