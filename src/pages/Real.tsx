@@ -41,8 +41,6 @@ import {
   Bot,
   ChevronDown,
   Sparkles,
-  Wrench,
-  CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -322,24 +320,46 @@ function renderAssistantParts(parts: any[]) {
       (typeof p.type === "string" && p.type.startsWith("tool-"))
   );
 
+  const toolNames = steps
+    .filter((p) => p.type === "dynamic-tool" || (typeof p.type === "string" && p.type.startsWith("tool-")))
+    .map((p) =>
+      p.type === "dynamic-tool" ? p.toolName : p.type.split("-").slice(1).join("-")
+    );
+
   return (
     <>
       {steps.length > 0 && (
-        <Collapsible defaultOpen={false} className="mb-3 rounded-xl border bg-muted/30">
-          <CollapsibleTrigger className="group flex w-full items-center justify-between gap-2 px-3 py-2 text-xs font-medium">
-            <span className="flex items-center gap-2">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              خطوات تنفيذ الوكيل
-              <span className="rounded-full bg-primary/10 text-primary px-2 py-0.5 text-[10px]">
-                {steps.length}
-              </span>
-            </span>
-            <ChevronDown className="h-3.5 w-3.5 transition-transform group-data-[state=open]:rotate-180" />
+        <Collapsible
+          defaultOpen={true}
+          className="mb-3 rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent overflow-hidden"
+        >
+          <CollapsibleTrigger className="group flex w-full items-center justify-between gap-3 px-4 py-3 hover:bg-primary/5 transition">
+            <div className="flex items-center gap-2 text-right min-w-0">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
+                <Sparkles className="h-3.5 w-3.5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold flex items-center gap-2">
+                  كيف فكّر رائد
+                  <span className="rounded-full bg-primary text-primary-foreground px-2 py-0.5 text-[10px] font-bold">
+                    {steps.length} خطوات
+                  </span>
+                </p>
+                {toolNames.length > 0 && (
+                  <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                    استخدم: {toolNames.join(" ← ")}
+                  </p>
+                )}
+              </div>
+            </div>
+            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180 shrink-0" />
           </CollapsibleTrigger>
-          <CollapsibleContent className="px-3 pb-3 pt-1 space-y-2">
-            {steps.map((part, i) => (
-              <StepRow key={i} index={i + 1} part={part} />
-            ))}
+          <CollapsibleContent className="px-4 pb-4 pt-2">
+            <div className="relative space-y-3 pr-3 border-r-2 border-dashed border-primary/30">
+              {steps.map((part, i) => (
+                <StepRow key={i} index={i + 1} part={part} total={steps.length} />
+              ))}
+            </div>
           </CollapsibleContent>
         </Collapsible>
       )}
@@ -349,17 +369,24 @@ function renderAssistantParts(parts: any[]) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function StepRow({ index, part }: { index: number; part: any }) {
+function StepRow({ index, part, total }: { index: number; part: any; total: number }) {
   const isTool =
     part.type === "dynamic-tool" ||
     (typeof part.type === "string" && part.type.startsWith("tool-"));
 
+  const label = isTool ? "استدعاء أداة" : "تفكير";
+
   if (!isTool) {
     return (
-      <div className="flex gap-2 text-xs">
-        <StepBadge index={index} icon={<Sparkles className="h-3 w-3" />} />
-        <div className="flex-1 rounded-lg bg-background border p-2 whitespace-pre-wrap leading-relaxed">
-          {part.text}
+      <div className="relative">
+        <StepDot index={index} />
+        <div className="mr-4">
+          <p className="text-[10px] font-semibold text-muted-foreground mb-1">
+            خطوة {index} من {total} · {label}
+          </p>
+          <div className="rounded-lg bg-background border p-2.5 text-xs whitespace-pre-wrap leading-relaxed">
+            {part.text}
+          </div>
         </div>
       </div>
     );
@@ -372,14 +399,16 @@ function StepRow({ index, part }: { index: number; part: any }) {
       : part.type.split("-").slice(1).join("-");
 
   return (
-    <div className="flex gap-2 text-xs">
-      <StepBadge
-        index={index}
-        icon={done ? <CheckCircle2 className="h-3 w-3" /> : <Wrench className="h-3 w-3" />}
-        tone={done ? "success" : "default"}
-      />
-      <div className="flex-1">
-        <Tool defaultOpen={false}>
+    <div className="relative">
+      <StepDot index={index} tone={done ? "success" : "default"} />
+      <div className="mr-4">
+        <p className="text-[10px] font-semibold text-muted-foreground mb-1 flex items-center gap-1.5">
+          <span>خطوة {index} من {total} · {label}</span>
+          <code className="px-1.5 py-0.5 rounded bg-primary/10 text-primary font-mono text-[10px]">
+            {toolName}
+          </code>
+        </p>
+        <Tool defaultOpen={done}>
           <ToolHeader type={part.type} state={part.state} toolName={toolName} />
           <ToolContent>
             <ToolInput input={part.input} />
@@ -394,29 +423,27 @@ function StepRow({ index, part }: { index: number; part: any }) {
   );
 }
 
-function StepBadge({
+function StepDot({
   index,
-  icon,
   tone = "default",
 }: {
   index: number;
-  icon: React.ReactNode;
   tone?: "default" | "success";
 }) {
   return (
-    <div className="flex flex-col items-center gap-1 pt-1">
-      <div
-        className={cn(
-          "flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold shrink-0",
-          tone === "success" ? "bg-success-soft text-success" : "bg-primary/10 text-primary"
-        )}
-      >
-        {index}
-      </div>
-      <div className="text-muted-foreground">{icon}</div>
+    <div
+      className={cn(
+        "absolute -right-[1.85rem] top-0 flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold ring-4 ring-background",
+        tone === "success"
+          ? "bg-success text-success-foreground"
+          : "bg-primary text-primary-foreground"
+      )}
+    >
+      {index}
     </div>
   );
 }
+
 
 function RaedMark({ size = 32 }: { size?: number }) {
   return (
