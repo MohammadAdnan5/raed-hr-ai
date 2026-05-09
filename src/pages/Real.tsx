@@ -418,24 +418,44 @@ export default function Real() {
               </ConversationEmptyState>
             )}
 
-            {messages.map((m) => (
-              <Message from={m.role} key={m.id}>
-                <MessageContent>
-                  {m.role === "assistant"
-                    ? renderAssistantParts(m.parts, devMode)
-                    : m.parts.map((part, idx) =>
-                        part.type === "text" ? (
-                          <span key={idx} className="whitespace-pre-wrap">
-                            {part.text}
-                          </span>
-                        ) : null
-                      )}
-                  {devMode && (
-                    <RawMessageJson message={m} />
-                  )}
-                </MessageContent>
-              </Message>
-            ))}
+            {messages.map((m, mi) => {
+              const userText =
+                m.role === "user"
+                  ? m.parts
+                      .map((p) => (p.type === "text" ? p.text : ""))
+                      .join("")
+                  : "";
+              // The user request that triggered this assistant message
+              const triggeringRequest =
+                m.role === "assistant"
+                  ? (() => {
+                      for (let i = mi - 1; i >= 0; i--) {
+                        if (messages[i].role === "user") {
+                          return messages[i].parts
+                            .map((p) => (p.type === "text" ? p.text : ""))
+                            .join("");
+                        }
+                      }
+                      return "";
+                    })()
+                  : "";
+              return (
+                <Message from={m.role} key={m.id}>
+                  <MessageContent>
+                    {m.role === "assistant" ? (
+                      <AgentJourney
+                        parts={m.parts}
+                        request={triggeringRequest}
+                        devMode={devMode}
+                      />
+                    ) : (
+                      <span className="whitespace-pre-wrap">{userText}</span>
+                    )}
+                    {devMode && <RawMessageJson message={m} />}
+                  </MessageContent>
+                </Message>
+              );
+            })}
 
             {status === "submitted" && (
               <Message from="assistant">
