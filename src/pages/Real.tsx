@@ -41,6 +41,12 @@ import {
   Bot,
   ChevronDown,
   Sparkles,
+  Code2,
+  Activity,
+  Cpu,
+  Zap,
+  Network,
+  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -53,6 +59,14 @@ interface Thread {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const ENDPOINT = `${SUPABASE_URL}/functions/v1/raed-agent`;
+const MODEL = "google/gemini-2.5-flash";
+const TOOL_REGISTRY = [
+  "getEmployeeProfile",
+  "searchPolicy",
+  "requestLeave",
+  "issueSalaryCertificate",
+  "simulateSalaryChange",
+];
 
 const newThread = (n: number): Thread => ({
   id: crypto.randomUUID(),
@@ -72,6 +86,7 @@ export default function Real() {
   const initial = useMemo(() => newThread(1), []);
   const [threads, setThreads] = useState<Thread[]>([initial]);
   const [activeId, setActiveId] = useState<string>(initial.id);
+  const [devMode, setDevMode] = useState(true);
   const counter = useRef(1);
 
   const active = threads.find((t) => t.id === activeId) ?? threads[0];
@@ -81,11 +96,32 @@ export default function Real() {
     []
   );
 
-  const { messages, sendMessage, status, error, setMessages } = useChat({
+  const { messages, sendMessage, status, error } = useChat({
     id: active?.id,
     messages: active?.messages ?? [],
     transport,
   });
+
+  // --- Latency tracking (sent → first token → done) ---
+  const sentAtRef = useRef<number | null>(null);
+  const [firstTokenMs, setFirstTokenMs] = useState<number | null>(null);
+  const [totalMs, setTotalMs] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (status === "submitted") {
+      sentAtRef.current = performance.now();
+      setFirstTokenMs(null);
+      setTotalMs(null);
+    }
+    if (status === "streaming" && sentAtRef.current && firstTokenMs === null) {
+      setFirstTokenMs(Math.round(performance.now() - sentAtRef.current));
+    }
+    if (status === "ready" && sentAtRef.current) {
+      setTotalMs(Math.round(performance.now() - sentAtRef.current));
+      sentAtRef.current = null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
 
   // Persist messages back to thread (in-memory only)
   useEffect(() => {
@@ -95,6 +131,18 @@ export default function Real() {
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
+
+  // Live aggregate metrics
+  const totalToolCalls = messages.reduce(
+    (n, m) =>
+      n +
+      m.parts.filter(
+        (p) =>
+          p.type === "dynamic-tool" ||
+          (typeof p.type === "string" && p.type.startsWith("tool-"))
+      ).length,
+    0
+  );
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
@@ -201,16 +249,68 @@ export default function Real() {
 
       {/* Chat */}
       <main className="flex-1 flex flex-col min-w-0">
-        <header className="border-b px-4 py-3 flex items-center justify-between">
-          <div>
-            <h1 className="text-sm font-bold">{active?.title}</h1>
-            <p className="text-[11px] text-muted-foreground">
-              نظام وكلاء حقيقي — Vercel AI SDK + Lovable AI Gateway + Tools
-            </p>
+        <header className="border-b">
+          <div className="px-4 py-2.5 flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <h1 className="text-sm font-bold truncate">{active?.title}</h1>
+              <p className="text-[10px] text-muted-foreground">
+                Orchestrator Agent · {TOOL_REGISTRY.length} specialized tools registered
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={() => setDevMode((v) => !v)}
+                className={cn(
+                  "flex items-center gap-1 text-[10px] px-2 py-1 rounded-md border font-mono transition",
+                  devMode
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-background hover:bg-muted"
+                )}
+              >
+                <Code2 className="h-3 w-3" />
+                DEV
+              </button>
+              <span className="text-[10px] px-2 py-1 rounded-full bg-success-soft text-success font-semibold">
+                ● LIVE
+              </span>
+            </div>
           </div>
-          <span className="text-[10px] px-2 py-1 rounded-full bg-success-soft text-success font-semibold">
-            ● مباشر
-          </span>
+          {/* Tech HUD */}
+          <div className="px-4 py-2 bg-muted/40 border-t flex items-center gap-3 text-[10px] font-mono overflow-x-auto whitespace-nowrap">
+            <HudPill icon={<Cpu className="h-3 w-3" />} label="model" value={MODEL} />
+            <HudPill
+              icon={<Network className="h-3 w-3" />}
+              label="endpoint"
+              value="POST /functions/v1/raed-agent"
+            />
+            <HudPill
+              icon={<Activity className="h-3 w-3" />}
+              label="status"
+              value={status}
+              tone={
+                status === "streaming"
+                  ? "primary"
+                  : status === "error"
+                  ? "danger"
+                  : "default"
+              }
+            />
+            <HudPill
+              icon={<Zap className="h-3 w-3" />}
+              label="ttft"
+              value={firstTokenMs !== null ? `${firstTokenMs}ms` : "—"}
+            />
+            <HudPill
+              icon={<Clock className="h-3 w-3" />}
+              label="total"
+              value={totalMs !== null ? `${totalMs}ms` : "—"}
+            />
+            <HudPill
+              icon={<Sparkles className="h-3 w-3" />}
+              label="tool_calls"
+              value={String(totalToolCalls)}
+            />
+          </div>
         </header>
 
         <Conversation key={active?.id} className="flex-1">
@@ -244,7 +344,7 @@ export default function Real() {
               <Message from={m.role} key={m.id}>
                 <MessageContent>
                   {m.role === "assistant"
-                    ? renderAssistantParts(m.parts)
+                    ? renderAssistantParts(m.parts, devMode)
                     : m.parts.map((part, idx) =>
                         part.type === "text" ? (
                           <span key={idx} className="whitespace-pre-wrap">
@@ -252,6 +352,9 @@ export default function Real() {
                           </span>
                         ) : null
                       )}
+                  {devMode && (
+                    <RawMessageJson message={m} />
+                  )}
                 </MessageContent>
               </Message>
             ))}
@@ -299,7 +402,7 @@ function PrettyJson({ data }: { data: unknown }) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function renderAssistantParts(parts: any[]) {
+function renderAssistantParts(parts: any[], devMode: boolean = false) {
   let finalIdx = -1;
   for (let i = parts.length - 1; i >= 0; i--) {
     if (parts[i].type === "text") {
@@ -378,8 +481,11 @@ function StepRow({ index, part, total }: { index: number; part: any; total: numb
       <div className="relative">
         <StepDot index={index} />
         <div className="mr-4">
-          <p className="text-[10px] font-semibold text-muted-foreground mb-1">
-            خطوة {index} من {total} · {label}
+          <p className="text-[10px] font-semibold text-muted-foreground mb-1 flex items-center gap-1.5 flex-wrap">
+            <span>خطوة {index} من {total}</span>
+            <span className="px-1.5 py-0.5 rounded bg-primary/15 text-primary font-mono text-[9px] uppercase">
+              reasoning
+            </span>
           </p>
           <div className="rounded-lg bg-background border p-2.5 text-xs whitespace-pre-wrap leading-relaxed">
             {part.text}
@@ -399,11 +505,24 @@ function StepRow({ index, part, total }: { index: number; part: any; total: numb
     <div className="relative">
       <StepDot index={index} tone={done ? "success" : "default"} />
       <div className="mr-4">
-        <p className="text-[10px] font-semibold text-muted-foreground mb-1 flex items-center gap-1.5">
-          <span>خطوة {index} من {total} · {label}</span>
-          <code className="px-1.5 py-0.5 rounded bg-primary/10 text-primary font-mono text-[10px]">
-            {toolName}
+        <p className="text-[10px] font-semibold text-muted-foreground mb-1 flex items-center gap-1.5 flex-wrap">
+          <span>خطوة {index} من {total}</span>
+          <span className="px-1.5 py-0.5 rounded bg-primary/15 text-primary font-mono text-[9px] uppercase">
+            tool_call
+          </span>
+          <code className="px-1.5 py-0.5 rounded bg-muted text-foreground font-mono text-[10px]">
+            {toolName}()
           </code>
+          <span
+            className={cn(
+              "px-1.5 py-0.5 rounded font-mono text-[9px]",
+              done
+                ? "bg-success-soft text-success"
+                : "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400"
+            )}
+          >
+            {part.state}
+          </span>
         </p>
         <Tool defaultOpen={done}>
           <ToolHeader type={part.type} state={part.state} toolName={toolName} />
@@ -440,6 +559,53 @@ function StepDot({
     </div>
   );
 }
+
+function HudPill({
+  icon,
+  label,
+  value,
+  tone = "default",
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  tone?: "default" | "primary" | "danger";
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 px-2 py-1 rounded-md border bg-background shrink-0",
+        tone === "primary" && "border-primary/40 text-primary",
+        tone === "danger" && "border-destructive/40 text-destructive"
+      )}
+    >
+      {icon}
+      <span className="text-muted-foreground">{label}=</span>
+      <span className="font-semibold">{value}</span>
+    </span>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function RawMessageJson({ message }: { message: any }) {
+  return (
+    <Collapsible className="mt-2 rounded-lg border border-dashed bg-muted/20">
+      <CollapsibleTrigger className="group flex w-full items-center justify-between gap-2 px-2.5 py-1.5 text-[10px] font-mono text-muted-foreground hover:text-foreground transition">
+        <span className="flex items-center gap-1.5">
+          <Code2 className="h-3 w-3" />
+          raw UIMessage · {message.parts.length} parts · role={message.role}
+        </span>
+        <ChevronDown className="h-3 w-3 transition-transform group-data-[state=open]:rotate-180" />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="px-2 pb-2">
+        <pre className="text-[10px] bg-background border rounded p-2 overflow-x-auto max-h-64 font-mono leading-relaxed">
+          {JSON.stringify(message, null, 2)}
+        </pre>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
 
 
 function RaedMark({ size = 32 }: { size?: number }) {
