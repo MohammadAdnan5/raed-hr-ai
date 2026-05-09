@@ -493,14 +493,92 @@ export default function Real() {
 
 function PrettyJson({ data }: { data: unknown }) {
   return (
-    <pre className="text-[11px] bg-muted/50 rounded-lg p-2 overflow-x-auto">
+    <pre className="text-[11px] bg-muted/50 rounded-lg p-2 overflow-x-auto leading-relaxed font-mono">
       {JSON.stringify(data, null, 2)}
     </pre>
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function renderAssistantParts(parts: any[], devMode: boolean = false) {
+function inlineJson(data: unknown, max = 70): string {
+  if (data === undefined || data === null) return "—";
+  let s: string;
+  try {
+    s = JSON.stringify(data);
+  } catch {
+    s = String(data);
+  }
+  if (!s) return "—";
+  return s.length > max ? s.slice(0, max - 1) + "…" : s;
+}
+
+// ===== Agent Journey: end-to-end orchestration trace =====
+//
+// Each assistant message becomes a phase-typed timeline:
+//   REQUEST → ORCHESTRATOR (reasoning) → AGENT (tool call)
+//            → ORCHESTRATOR (synthesis)  → ... → FINAL RESULT
+//
+// Goals:
+//   - Make the orchestration layer visible (who decided what)
+//   - Show every specialized agent activated, with its role and I/O
+//   - Track per-step latency so judges see real execution timing
+//   - Terminate with a distinct card that says "answer" or "action taken"
+
+type Phase =
+  | { kind: "request"; text: string }
+  | { kind: "reasoning"; text: string; partIdx: number }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  | { kind: "agent"; toolName: string; part: any; partIdx: number }
+  | {
+      kind: "final";
+      text: string;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      action: ReturnType<typeof inferAction>;
+    };
+
+function AgentJourney({
+  parts,
+  request,
+  devMode,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  parts: any[];
+  request: string;
+  devMode: boolean;
+}) {
+  // Per-part timing: stamp first-seen and "completed" timestamps
+  const timingsRef = useRef<
+    Map<number, { startedAt: number; endedAt: number | null }>
+  >(new Map());
+  const startedAtRef = useRef<number>(performance.now());
+  const [, force] = useState(0);
+
+  useEffect(() => {
+    let changed = false;
+    parts.forEach((p, i) => {
+      const isTool =
+        p.type === "dynamic-tool" ||
+        (typeof p.type === "string" && p.type.startsWith("tool-"));
+      const t = timingsRef.current.get(i);
+      if (!t) {
+        timingsRef.current.set(i, {
+          startedAt: performance.now(),
+          endedAt: null,
+        });
+        changed = true;
+      } else if (
+        t.endedAt === null &&
+        ((isTool &&
+          (p.state === "output-available" || p.state === "output-error")) ||
+          (!isTool && typeof p.text === "string"))
+      ) {
+        t.endedAt = performance.now();
+        changed = true;
+      }
+    });
+    if (changed) force((x) => x + 1);
+  }, [parts]);
+
+  // Find the final text part (the answer)
   let finalIdx = -1;
   for (let i = parts.length - 1; i >= 0; i--) {
     if (parts[i].type === "text") {
@@ -508,153 +586,462 @@ function renderAssistantParts(parts: any[], devMode: boolean = false) {
       break;
     }
   }
-  const stepParts = finalIdx === -1 ? parts : parts.slice(0, finalIdx);
-  const finalPart = finalIdx === -1 ? null : parts[finalIdx];
 
-  const steps = stepParts.filter(
-    (p) =>
-      p.type === "text" ||
+  // Build phase list
+  const phases: Phase[] = [];
+  if (request) phases.push({ kind: "request", text: request });
+
+  parts.forEach((p, i) => {
+    if (i === finalIdx) return;
+    if (p.type === "text" && p.text?.trim()) {
+      phases.push({ kind: "reasoning", text: p.text, partIdx: i });
+    } else if (
       p.type === "dynamic-tool" ||
       (typeof p.type === "string" && p.type.startsWith("tool-"))
-  );
+    ) {
+      const toolName =
+        p.type === "dynamic-tool"
+          ? p.toolName
+          : p.type.split("-").slice(1).join("-");
+      phases.push({ kind: "agent", toolName, part: p, partIdx: i });
+    }
+  });
 
-  const toolNames = steps
-    .filter((p) => p.type === "dynamic-tool" || (typeof p.type === "string" && p.type.startsWith("tool-")))
-    .map((p) =>
-      p.type === "dynamic-tool" ? p.toolName : p.type.split("-").slice(1).join("-")
-    );
+  if (finalIdx !== -1) {
+    const finalPart = parts[finalIdx];
+    // Action terminator: if the last tool produced an action, surface it
+    let action: ReturnType<typeof inferAction> = null;
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const p = parts[i];
+      const isTool =
+        p.type === "dynamic-tool" ||
+        (typeof p.type === "string" && p.type.startsWith("tool-"));
+      if (isTool && p.state === "output-available") {
+        const toolName =
+          p.type === "dynamic-tool"
+            ? p.toolName
+            : p.type.split("-").slice(1).join("-");
+        action = inferAction(toolName, p.output);
+        if (action) break;
+      }
+    }
+    phases.push({ kind: "final", text: finalPart.text ?? "", action });
+  }
+
+  const agentCount = phases.filter((p) => p.kind === "agent").length;
+  const reasoningCount = phases.filter((p) => p.kind === "reasoning").length;
+  const totalElapsed = (() => {
+    const last = parts.length - 1;
+    const t = timingsRef.current.get(last);
+    if (!t) return null;
+    return Math.round((t.endedAt ?? performance.now()) - startedAtRef.current);
+  })();
 
   return (
-    <>
-      {steps.length > 0 && (
-        <Collapsible
-          defaultOpen={true}
-          className="mb-3 rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent overflow-hidden"
-        >
-          <CollapsibleTrigger className="group flex w-full items-center justify-between gap-3 px-4 py-3 hover:bg-primary/5 transition">
-            <div className="flex items-center gap-2 text-right min-w-0">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
-                <Sparkles className="h-3.5 w-3.5" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-bold flex items-center gap-2">
-                  كيف فكّر رائد
-                  <span className="rounded-full bg-primary text-primary-foreground px-2 py-0.5 text-[10px] font-bold">
-                    {steps.length} خطوات
-                  </span>
-                </p>
-                {toolNames.length > 0 && (
-                  <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
-                    استخدم: {toolNames.join(" ← ")}
-                  </p>
-                )}
-              </div>
-            </div>
-            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180 shrink-0" />
-          </CollapsibleTrigger>
-          <CollapsibleContent className="px-4 pb-4 pt-2">
-            <div className="relative space-y-3 pr-3 border-r-2 border-dashed border-primary/30">
-              {steps.map((part, i) => (
-                <StepRow key={i} index={i + 1} part={part} total={steps.length} />
-              ))}
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-      )}
-      {finalPart && <MessageResponse>{finalPart.text}</MessageResponse>}
-    </>
+    <div className="rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-transparent overflow-hidden">
+      {/* Trace header */}
+      <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-b bg-background/60 backdrop-blur">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
+            <Brain className="h-3.5 w-3.5" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold leading-tight">رحلة تنفيذ الوكيل</p>
+            <p className="text-[10px] text-muted-foreground font-mono">
+              Agent execution trace
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5 text-[10px] font-mono shrink-0">
+          <TraceMetric icon={<Brain className="h-3 w-3" />} label="reasoning" value={reasoningCount} />
+          <TraceMetric icon={<Wrench className="h-3 w-3" />} label="agents" value={agentCount} />
+          {totalElapsed !== null && (
+            <TraceMetric icon={<Clock className="h-3 w-3" />} label="elapsed" value={`${totalElapsed}ms`} />
+          )}
+        </div>
+      </div>
+
+      {/* Timeline rail */}
+      <div className="px-4 py-4 relative">
+        <div className="absolute right-[1.85rem] top-4 bottom-4 w-px border-r-2 border-dashed border-primary/25" />
+        <div className="space-y-3">
+          {phases.map((phase, i) => {
+            const ts =
+              "partIdx" in phase ? timingsRef.current.get(phase.partIdx) : null;
+            const startMs =
+              ts && Math.round(ts.startedAt - startedAtRef.current);
+            const durMs =
+              ts && ts.endedAt !== null
+                ? Math.round(ts.endedAt - ts.startedAt)
+                : null;
+            return (
+              <PhaseCard
+                key={i}
+                phase={phase}
+                index={i}
+                startMs={startMs ?? null}
+                durMs={durMs}
+                devMode={devMode}
+                isLastInTrace={i === phases.length - 1}
+              />
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function StepRow({ index, part, total }: { index: number; part: any; total: number }) {
-  const isTool =
-    part.type === "dynamic-tool" ||
-    (typeof part.type === "string" && part.type.startsWith("tool-"));
+function TraceMetric({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted/60 border">
+      {icon}
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-bold">{value}</span>
+    </span>
+  );
+}
 
-  const label = isTool ? "استدعاء أداة" : "تفكير";
+function PhaseCard({
+  phase,
+  index,
+  startMs,
+  durMs,
+  devMode,
+  isLastInTrace,
+}: {
+  phase: Phase;
+  index: number;
+  startMs: number | null;
+  durMs: number | null;
+  devMode: boolean;
+  isLastInTrace: boolean;
+}) {
+  // Visual style per phase type
+  const styles = {
+    request: {
+      ring: "bg-muted text-foreground border-muted-foreground/30",
+      badge: "bg-muted text-muted-foreground",
+      label: "REQUEST",
+      icon: MessageSquareText,
+      arabic: "طلب المستخدم",
+    },
+    reasoning: {
+      ring: "bg-primary text-primary-foreground border-primary",
+      badge: "bg-primary/15 text-primary",
+      label: "ORCHESTRATOR",
+      icon: Brain,
+      arabic: "قرار المنسّق",
+    },
+    agent: {
+      ring: "bg-amber-500 text-white border-amber-500",
+      badge: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
+      label: "AGENT CALL",
+      icon: Wrench,
+      arabic: "وكيل متخصّص",
+    },
+    final: {
+      ring: "bg-success text-success-foreground border-success",
+      badge: "bg-success/15 text-success",
+      label: "FINAL RESULT",
+      icon: Target,
+      arabic: "النتيجة النهائية",
+    },
+  } as const;
 
-  if (!isTool) {
-    return (
-      <div className="relative">
-        <StepDot index={index} />
-        <div className="mr-4">
-          <p className="text-[10px] font-semibold text-muted-foreground mb-1 flex items-center gap-1.5 flex-wrap">
-            <span>خطوة {index} من {total}</span>
-            <span className="px-1.5 py-0.5 rounded bg-primary/15 text-primary font-mono text-[9px] uppercase">
-              reasoning
-            </span>
-          </p>
-          <div className="rounded-lg bg-background border p-2.5 text-xs whitespace-pre-wrap leading-relaxed">
-            {part.text}
-          </div>
-        </div>
+  const s = styles[phase.kind];
+  const Icon = s.icon;
+
+  return (
+    <div className="relative">
+      {/* Rail dot */}
+      <div
+        className={cn(
+          "absolute -right-[2.05rem] top-1 flex h-7 w-7 items-center justify-center rounded-full ring-4 ring-background border-2 shadow-sm",
+          s.ring
+        )}
+      >
+        <Icon className="h-3.5 w-3.5" />
       </div>
-    );
-  }
 
-  const done = part.state === "output-available";
+      <div className="mr-4 min-w-0">
+        {/* Header row */}
+        <div className="flex items-center gap-1.5 flex-wrap mb-1">
+          <span className="text-[10px] text-muted-foreground font-mono">
+            #{index + 1}
+          </span>
+          <span
+            className={cn(
+              "px-1.5 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider",
+              s.badge
+            )}
+          >
+            {s.label}
+          </span>
+          <span className="text-[11px] font-semibold">{s.arabic}</span>
+          {startMs !== null && (
+            <span className="text-[10px] text-muted-foreground font-mono">
+              · t+{startMs}ms
+            </span>
+          )}
+          {durMs !== null && phase.kind === "agent" && (
+            <span className="text-[10px] text-success font-mono font-bold">
+              · {durMs}ms
+            </span>
+          )}
+        </div>
+
+        {/* Body per type */}
+        {phase.kind === "request" && (
+          <div className="rounded-lg border bg-background/80 p-2.5 text-xs leading-relaxed">
+            <span className="text-muted-foreground">"</span>
+            {phase.text}
+            <span className="text-muted-foreground">"</span>
+            <div className="mt-2 flex flex-wrap gap-1 text-[10px] font-mono text-muted-foreground border-t pt-1.5">
+              <span>POST /functions/v1/raed-agent</span>
+              <span>·</span>
+              <span>model={MODEL}</span>
+            </div>
+          </div>
+        )}
+
+        {phase.kind === "reasoning" && (
+          <div className="rounded-lg border bg-primary/5 border-primary/20 p-2.5 text-xs leading-relaxed whitespace-pre-wrap">
+            {phase.text}
+          </div>
+        )}
+
+        {phase.kind === "agent" && (
+          <AgentInvocation part={phase.part} devMode={devMode} />
+        )}
+
+        {phase.kind === "final" && (
+          <FinalCard text={phase.text} action={phase.action} />
+        )}
+
+        {/* Arrow connector */}
+        {!isLastInTrace && (
+          <div className="flex justify-end pr-2 -mb-1.5 mt-1 text-muted-foreground/40">
+            <ArrowDown className="h-3 w-3" />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AgentInvocation({
+  part,
+  devMode,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  part: any;
+  devMode: boolean;
+}) {
   const toolName =
     part.type === "dynamic-tool"
       ? part.toolName
       : part.type.split("-").slice(1).join("-");
+  const agent = getAgent(toolName);
+  const AgentIcon = agent.icon;
+  const done = part.state === "output-available";
+  const errored = part.state === "output-error";
 
   return (
-    <div className="relative">
-      <StepDot index={index} tone={done ? "success" : "default"} />
-      <div className="mr-4">
-        <p className="text-[10px] font-semibold text-muted-foreground mb-1 flex items-center gap-1.5 flex-wrap">
-          <span>خطوة {index} من {total}</span>
-          <span className="px-1.5 py-0.5 rounded bg-primary/15 text-primary font-mono text-[9px] uppercase">
-            tool_call
-          </span>
-          <code className="px-1.5 py-0.5 rounded bg-muted text-foreground font-mono text-[10px]">
-            {toolName}()
-          </code>
+    <div
+      className={cn(
+        "rounded-lg border-2 overflow-hidden bg-background",
+        errored
+          ? "border-destructive/40"
+          : done
+          ? "border-amber-500/30"
+          : "border-amber-500/20 animate-pulse"
+      )}
+    >
+      {/* Agent identity bar */}
+      <div className="flex items-center gap-2 px-2.5 py-1.5 bg-amber-500/5 border-b border-amber-500/20">
+        <div className="flex h-6 w-6 items-center justify-center rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 shrink-0">
+          <AgentIcon className="h-3.5 w-3.5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-bold leading-tight truncate">
+            {agent.label}
+          </p>
+          <p className="text-[10px] text-muted-foreground font-mono truncate">
+            {agent.role} · <code>{toolName}()</code>
+          </p>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          {agent.mutates && (
+            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-700 dark:text-orange-400 inline-flex items-center gap-1">
+              <AlertTriangle className="h-2.5 w-2.5" />
+              MUTATES
+            </span>
+          )}
           <span
             className={cn(
-              "px-1.5 py-0.5 rounded font-mono text-[9px]",
-              done
-                ? "bg-success-soft text-success"
-                : "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400"
+              "text-[9px] font-mono px-1.5 py-0.5 rounded font-bold",
+              errored
+                ? "bg-destructive/15 text-destructive"
+                : done
+                ? "bg-success/15 text-success"
+                : "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400"
             )}
           >
             {part.state}
           </span>
-        </p>
-        <Tool defaultOpen={done}>
-          <ToolHeader type={part.type} state={part.state} toolName={toolName} />
-          <ToolContent>
-            <ToolInput input={part.input} />
-            <ToolOutput
-              output={part.output ? <PrettyJson data={part.output} /> : null}
-              errorText={part.errorText}
-            />
-          </ToolContent>
-        </Tool>
+        </div>
+      </div>
+
+      {/* IO rows */}
+      <div className="divide-y">
+        <IORow
+          direction="in"
+          label="INPUT"
+          arabic="مدخلات"
+          data={part.input}
+          devMode={devMode}
+        />
+        {(done || errored) && (
+          <IORow
+            direction="out"
+            label={errored ? "ERROR" : "OUTPUT"}
+            arabic={errored ? "خطأ" : "مخرجات"}
+            data={errored ? part.errorText : part.output}
+            devMode={devMode}
+            errored={errored}
+          />
+        )}
       </div>
     </div>
   );
 }
 
-function StepDot({
-  index,
-  tone = "default",
+function IORow({
+  direction,
+  label,
+  arabic,
+  data,
+  devMode,
+  errored = false,
 }: {
-  index: number;
-  tone?: "default" | "success";
+  direction: "in" | "out";
+  label: string;
+  arabic: string;
+  data: unknown;
+  devMode: boolean;
+  errored?: boolean;
+}) {
+  const [open, setOpen] = useState(devMode);
+  useEffect(() => {
+    setOpen(devMode);
+  }, [devMode]);
+
+  return (
+    <div className="px-2.5 py-1.5">
+      <div className="flex items-center gap-2">
+        <span
+          className={cn(
+            "text-[9px] font-mono px-1.5 py-0.5 rounded font-bold inline-flex items-center gap-1 shrink-0",
+            errored
+              ? "bg-destructive/15 text-destructive"
+              : direction === "in"
+              ? "bg-blue-500/15 text-blue-700 dark:text-blue-400"
+              : "bg-success/15 text-success"
+          )}
+        >
+          {direction === "in" ? "→" : "←"} {label}
+        </span>
+        <span className="text-[10px] text-muted-foreground">{arabic}</span>
+        <code className="text-[10px] font-mono text-muted-foreground truncate flex-1 min-w-0">
+          {inlineJson(data)}
+        </code>
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="text-[9px] font-mono text-primary hover:underline shrink-0"
+        >
+          {open ? "إخفاء" : "عرض"}
+        </button>
+      </div>
+      {open && (
+        <div className="mt-1.5">
+          {typeof data === "string" ? (
+            <pre className="text-[11px] bg-muted/50 rounded-lg p-2 overflow-x-auto whitespace-pre-wrap">
+              {data}
+            </pre>
+          ) : (
+            <PrettyJson data={data} />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FinalCard({
+  text,
+  action,
+}: {
+  text: string;
+  action: ReturnType<typeof inferAction>;
 }) {
   return (
-    <div
+    <div className="rounded-lg border-2 border-success/40 bg-success/5 overflow-hidden">
+      <div className="flex items-center gap-2 px-2.5 py-1.5 bg-success/10 border-b border-success/30">
+        <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+        <span className="text-[11px] font-bold text-success">
+          {action ? "إجراء مُنفّذ + رد على المستخدم" : "إجابة المستخدم"}
+        </span>
+        {action && (
+          <code className="ml-auto text-[9px] font-mono px-1.5 py-0.5 rounded bg-success/15 text-success">
+            {action.kind}
+          </code>
+        )}
+      </div>
+      {action && (
+        <div className="px-2.5 py-1.5 bg-success/5 border-b border-success/20 text-[11px] flex items-start gap-1.5">
+          <Target className="h-3 w-3 text-success mt-0.5 shrink-0" />
+          <span>{action.summary}</span>
+        </div>
+      )}
+      <div className="p-3 text-sm leading-relaxed whitespace-pre-wrap">
+        {text}
+      </div>
+    </div>
+  );
+}
+
+function HudPill({
+  icon,
+  label,
+  value,
+  tone = "default",
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  tone?: "default" | "primary" | "danger";
+}) {
+  return (
+    <span
       className={cn(
-        "absolute -right-[1.85rem] top-0 flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold ring-4 ring-background",
-        tone === "success"
-          ? "bg-success text-success-foreground"
-          : "bg-primary text-primary-foreground"
+        "inline-flex items-center gap-1 px-2 py-1 rounded-md border bg-background shrink-0",
+        tone === "primary" && "border-primary/40 text-primary",
+        tone === "danger" && "border-destructive/40 text-destructive"
       )}
     >
-      {index}
-    </div>
+      {icon}
+      <span className="text-muted-foreground">{label}=</span>
+      <span className="font-semibold">{value}</span>
+    </span>
   );
 }
 
