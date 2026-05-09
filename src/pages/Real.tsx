@@ -86,6 +86,7 @@ export default function Real() {
   const initial = useMemo(() => newThread(1), []);
   const [threads, setThreads] = useState<Thread[]>([initial]);
   const [activeId, setActiveId] = useState<string>(initial.id);
+  const [devMode, setDevMode] = useState(true);
   const counter = useRef(1);
 
   const active = threads.find((t) => t.id === activeId) ?? threads[0];
@@ -95,11 +96,32 @@ export default function Real() {
     []
   );
 
-  const { messages, sendMessage, status, error, setMessages } = useChat({
+  const { messages, sendMessage, status, error } = useChat({
     id: active?.id,
     messages: active?.messages ?? [],
     transport,
   });
+
+  // --- Latency tracking (sent → first token → done) ---
+  const sentAtRef = useRef<number | null>(null);
+  const [firstTokenMs, setFirstTokenMs] = useState<number | null>(null);
+  const [totalMs, setTotalMs] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (status === "submitted") {
+      sentAtRef.current = performance.now();
+      setFirstTokenMs(null);
+      setTotalMs(null);
+    }
+    if (status === "streaming" && sentAtRef.current && firstTokenMs === null) {
+      setFirstTokenMs(Math.round(performance.now() - sentAtRef.current));
+    }
+    if (status === "ready" && sentAtRef.current) {
+      setTotalMs(Math.round(performance.now() - sentAtRef.current));
+      sentAtRef.current = null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
 
   // Persist messages back to thread (in-memory only)
   useEffect(() => {
@@ -109,6 +131,18 @@ export default function Real() {
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
+
+  // Live aggregate metrics
+  const totalToolCalls = messages.reduce(
+    (n, m) =>
+      n +
+      m.parts.filter(
+        (p) =>
+          p.type === "dynamic-tool" ||
+          (typeof p.type === "string" && p.type.startsWith("tool-"))
+      ).length,
+    0
+  );
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
