@@ -29,7 +29,21 @@ import {
   ToolOutput,
 } from "@/components/ai-elements/tool";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, ArrowRight, Bot } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  Plus,
+  Trash2,
+  ArrowRight,
+  Bot,
+  ChevronDown,
+  Sparkles,
+  Wrench,
+  CheckCircle2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Thread {
