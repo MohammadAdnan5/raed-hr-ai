@@ -502,11 +502,24 @@ function StepRow({ index, part, total }: { index: number; part: any; total: numb
     <div className="relative">
       <StepDot index={index} tone={done ? "success" : "default"} />
       <div className="mr-4">
-        <p className="text-[10px] font-semibold text-muted-foreground mb-1 flex items-center gap-1.5">
-          <span>خطوة {index} من {total} · {label}</span>
-          <code className="px-1.5 py-0.5 rounded bg-primary/10 text-primary font-mono text-[10px]">
-            {toolName}
+        <p className="text-[10px] font-semibold text-muted-foreground mb-1 flex items-center gap-1.5 flex-wrap">
+          <span>خطوة {index} من {total}</span>
+          <span className="px-1.5 py-0.5 rounded bg-primary/15 text-primary font-mono text-[9px] uppercase">
+            tool_call
+          </span>
+          <code className="px-1.5 py-0.5 rounded bg-muted text-foreground font-mono text-[10px]">
+            {toolName}()
           </code>
+          <span
+            className={cn(
+              "px-1.5 py-0.5 rounded font-mono text-[9px]",
+              done
+                ? "bg-success-soft text-success"
+                : "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400"
+            )}
+          >
+            {part.state}
+          </span>
         </p>
         <Tool defaultOpen={done}>
           <ToolHeader type={part.type} state={part.state} toolName={toolName} />
