@@ -249,16 +249,68 @@ export default function Real() {
 
       {/* Chat */}
       <main className="flex-1 flex flex-col min-w-0">
-        <header className="border-b px-4 py-3 flex items-center justify-between">
-          <div>
-            <h1 className="text-sm font-bold">{active?.title}</h1>
-            <p className="text-[11px] text-muted-foreground">
-              نظام وكلاء حقيقي — Vercel AI SDK + Lovable AI Gateway + Tools
-            </p>
+        <header className="border-b">
+          <div className="px-4 py-2.5 flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <h1 className="text-sm font-bold truncate">{active?.title}</h1>
+              <p className="text-[10px] text-muted-foreground">
+                Orchestrator Agent · {TOOL_REGISTRY.length} specialized tools registered
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={() => setDevMode((v) => !v)}
+                className={cn(
+                  "flex items-center gap-1 text-[10px] px-2 py-1 rounded-md border font-mono transition",
+                  devMode
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-background hover:bg-muted"
+                )}
+              >
+                <Code2 className="h-3 w-3" />
+                DEV
+              </button>
+              <span className="text-[10px] px-2 py-1 rounded-full bg-success-soft text-success font-semibold">
+                ● LIVE
+              </span>
+            </div>
           </div>
-          <span className="text-[10px] px-2 py-1 rounded-full bg-success-soft text-success font-semibold">
-            ● مباشر
-          </span>
+          {/* Tech HUD */}
+          <div className="px-4 py-2 bg-muted/40 border-t flex items-center gap-3 text-[10px] font-mono overflow-x-auto whitespace-nowrap">
+            <HudPill icon={<Cpu className="h-3 w-3" />} label="model" value={MODEL} />
+            <HudPill
+              icon={<Network className="h-3 w-3" />}
+              label="endpoint"
+              value="POST /functions/v1/raed-agent"
+            />
+            <HudPill
+              icon={<Activity className="h-3 w-3" />}
+              label="status"
+              value={status}
+              tone={
+                status === "streaming"
+                  ? "primary"
+                  : status === "error"
+                  ? "danger"
+                  : "default"
+              }
+            />
+            <HudPill
+              icon={<Zap className="h-3 w-3" />}
+              label="ttft"
+              value={firstTokenMs !== null ? `${firstTokenMs}ms` : "—"}
+            />
+            <HudPill
+              icon={<Clock className="h-3 w-3" />}
+              label="total"
+              value={totalMs !== null ? `${totalMs}ms` : "—"}
+            />
+            <HudPill
+              icon={<Sparkles className="h-3 w-3" />}
+              label="tool_calls"
+              value={String(totalToolCalls)}
+            />
+          </div>
         </header>
 
         <Conversation key={active?.id} className="flex-1">
