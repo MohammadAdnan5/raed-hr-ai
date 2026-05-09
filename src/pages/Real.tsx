@@ -402,7 +402,7 @@ function PrettyJson({ data }: { data: unknown }) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function renderAssistantParts(parts: any[]) {
+function renderAssistantParts(parts: any[], devMode: boolean = false) {
   let finalIdx = -1;
   for (let i = parts.length - 1; i >= 0; i--) {
     if (parts[i].type === "text") {
