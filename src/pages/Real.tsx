@@ -481,8 +481,11 @@ function StepRow({ index, part, total }: { index: number; part: any; total: numb
       <div className="relative">
         <StepDot index={index} />
         <div className="mr-4">
-          <p className="text-[10px] font-semibold text-muted-foreground mb-1">
-            خطوة {index} من {total} · {label}
+          <p className="text-[10px] font-semibold text-muted-foreground mb-1 flex items-center gap-1.5 flex-wrap">
+            <span>خطوة {index} من {total}</span>
+            <span className="px-1.5 py-0.5 rounded bg-primary/15 text-primary font-mono text-[9px] uppercase">
+              reasoning
+            </span>
           </p>
           <div className="rounded-lg bg-background border p-2.5 text-xs whitespace-pre-wrap leading-relaxed">
             {part.text}
