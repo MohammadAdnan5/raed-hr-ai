@@ -162,7 +162,7 @@ Deno.serve(async (req) => {
 - قبل تنفيذ أي إجراء حسّاس (طلب إجازة، إصدار خطاب)، استدعِ الأداة مباشرة — الواجهة تعرض النتيجة للمستخدم.
 - اشرح خطواتك بإيجاز قبل وبعد استدعاء الأداة.
 - معلومات الموظف الحالي يمكن جلبها عبر getEmployeeProfile.`,
-      messages: convertToModelMessages(messages),
+      messages: await convertToModelMessages(messages),
       tools,
       stopWhen: stepCountIs(50),
     });
