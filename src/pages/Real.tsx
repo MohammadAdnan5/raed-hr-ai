@@ -446,29 +446,6 @@ function StepDot({
   );
 }
 
-function StepBadge({
-  index,
-  icon,
-  tone = "default",
-}: {
-  index: number;
-  icon: React.ReactNode;
-  tone?: "default" | "success";
-}) {
-  return (
-    <div className="flex flex-col items-center gap-1 pt-1">
-      <div
-        className={cn(
-          "flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold shrink-0",
-          tone === "success" ? "bg-success-soft text-success" : "bg-primary/10 text-primary"
-        )}
-      >
-        {index}
-      </div>
-      <div className="text-muted-foreground">{icon}</div>
-    </div>
-  );
-}
 
 function RaedMark({ size = 32 }: { size?: number }) {
   return (
