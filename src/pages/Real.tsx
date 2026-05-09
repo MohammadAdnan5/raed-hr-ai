@@ -47,6 +47,18 @@ import {
   Zap,
   Network,
   Clock,
+  User,
+  BookOpen,
+  Calendar,
+  FileText,
+  Calculator,
+  CheckCircle2,
+  MessageSquareText,
+  ArrowDown,
+  Wrench,
+  Brain,
+  Target,
+  AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
