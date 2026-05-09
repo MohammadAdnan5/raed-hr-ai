@@ -1045,32 +1045,6 @@ function HudPill({
   );
 }
 
-function HudPill({
-  icon,
-  label,
-  value,
-  tone = "default",
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  tone?: "default" | "primary" | "danger";
-}) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 px-2 py-1 rounded-md border bg-background shrink-0",
-        tone === "primary" && "border-primary/40 text-primary",
-        tone === "danger" && "border-destructive/40 text-destructive"
-      )}
-    >
-      {icon}
-      <span className="text-muted-foreground">{label}=</span>
-      <span className="font-semibold">{value}</span>
-    </span>
-  );
-}
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function RawMessageJson({ message }: { message: any }) {
   return (
