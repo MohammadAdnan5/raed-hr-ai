@@ -59,6 +59,14 @@ interface Thread {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const ENDPOINT = `${SUPABASE_URL}/functions/v1/raed-agent`;
+const MODEL = "google/gemini-2.5-flash";
+const TOOL_REGISTRY = [
+  "getEmployeeProfile",
+  "searchPolicy",
+  "requestLeave",
+  "issueSalaryCertificate",
+  "simulateSalaryChange",
+];
 
 const newThread = (n: number): Thread => ({
   id: crypto.randomUUID(),
