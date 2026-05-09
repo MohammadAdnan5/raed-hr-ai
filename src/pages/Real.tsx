@@ -80,6 +80,72 @@ const TOOL_REGISTRY = [
   "simulateSalaryChange",
 ];
 
+// Each tool is presented as a "specialized sub-agent" the orchestrator delegates to.
+const AGENT_REGISTRY: Record<
+  string,
+  { label: string; role: string; icon: typeof User; mutates: boolean }
+> = {
+  getEmployeeProfile: {
+    label: "وكيل بيانات الموظف",
+    role: "Employee Profile Agent",
+    icon: User,
+    mutates: false,
+  },
+  searchPolicy: {
+    label: "وكيل السياسات",
+    role: "Policy Retrieval Agent (RAG-ready)",
+    icon: BookOpen,
+    mutates: false,
+  },
+  requestLeave: {
+    label: "وكيل طلبات الإجازة",
+    role: "Leave Request Agent",
+    icon: Calendar,
+    mutates: true,
+  },
+  issueSalaryCertificate: {
+    label: "وكيل إصدار الوثائق",
+    role: "Document Issuance Agent",
+    icon: FileText,
+    mutates: true,
+  },
+  simulateSalaryChange: {
+    label: "وكيل المحاكاة المالية",
+    role: "Payroll Simulation Agent",
+    icon: Calculator,
+    mutates: false,
+  },
+};
+
+const getAgent = (toolName: string) =>
+  AGENT_REGISTRY[toolName] ?? {
+    label: toolName,
+    role: "Custom Tool",
+    icon: Wrench,
+    mutates: false,
+  };
+
+// Infer a human-readable "action taken" line from a tool output shape.
+function inferAction(toolName: string, output: unknown):
+  | { kind: string; summary: string }
+  | null {
+  if (!output || typeof output !== "object") return null;
+  const o = output as Record<string, unknown>;
+  if (toolName === "issueSalaryCertificate" && o.documentId) {
+    return {
+      kind: "document.issued",
+      summary: `تم إصدار الوثيقة ${o.documentId} وإرسالها إلى ${o.deliveredTo ?? "المستفيد"}`,
+    };
+  }
+  if (toolName === "requestLeave" && o.requestId) {
+    return {
+      kind: "leave.pending_approval",
+      summary: `تم تقديم طلب الإجازة ${o.requestId} بانتظار موافقة ${o.sentTo ?? "المدير"}`,
+    };
+  }
+  return null;
+}
+
 const newThread = (n: number): Thread => ({
   id: crypto.randomUUID(),
   title: `محادثة ${n}`,
