@@ -558,7 +558,52 @@ function StepDot({
       {index}
     </div>
   );
+function HudPill({
+  icon,
+  label,
+  value,
+  tone = "default",
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  tone?: "default" | "primary" | "danger";
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 px-2 py-1 rounded-md border bg-background shrink-0",
+        tone === "primary" && "border-primary/40 text-primary",
+        tone === "danger" && "border-destructive/40 text-destructive"
+      )}
+    >
+      {icon}
+      <span className="text-muted-foreground">{label}=</span>
+      <span className="font-semibold">{value}</span>
+    </span>
+  );
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function RawMessageJson({ message }: { message: any }) {
+  return (
+    <Collapsible className="mt-2 rounded-lg border border-dashed bg-muted/20">
+      <CollapsibleTrigger className="group flex w-full items-center justify-between gap-2 px-2.5 py-1.5 text-[10px] font-mono text-muted-foreground hover:text-foreground transition">
+        <span className="flex items-center gap-1.5">
+          <Code2 className="h-3 w-3" />
+          raw UIMessage · {message.parts.length} parts · role={message.role}
+        </span>
+        <ChevronDown className="h-3 w-3 transition-transform group-data-[state=open]:rotate-180" />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="px-2 pb-2">
+        <pre className="text-[10px] bg-background border rounded p-2 overflow-x-auto max-h-64 font-mono leading-relaxed">
+          {JSON.stringify(message, null, 2)}
+        </pre>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
 
 
 function RaedMark({ size = 32 }: { size?: number }) {
