@@ -196,7 +196,7 @@ export default function Real() {
           <RaedMark />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold leading-tight">رائد · الوكيل الحقيقي</p>
-            <p className="text-[10px] text-muted-foreground">Lovable AI · Tools · Streaming</p>
+            <p className="text-[10px] text-muted-foreground">AI Gateway · Tools · Streaming</p>
           </div>
         </div>
         <div className="p-2">
