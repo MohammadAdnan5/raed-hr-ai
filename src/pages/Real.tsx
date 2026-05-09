@@ -284,9 +284,6 @@ export default function Real() {
               <PromptInputSubmit status={status} disabled={isLoading} />
             </PromptInputFooter>
           </PromptInput>
-          <p className="text-[10px] text-muted-foreground mt-2 text-center">
-            مدعوم بـ <span className="font-semibold">google/gemini-2.5-flash</span> عبر Lovable AI Gateway
-          </p>
         </div>
       </main>
     </div>
