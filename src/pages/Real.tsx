@@ -41,6 +41,12 @@ import {
   Bot,
   ChevronDown,
   Sparkles,
+  Code2,
+  Activity,
+  Cpu,
+  Zap,
+  Network,
+  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
