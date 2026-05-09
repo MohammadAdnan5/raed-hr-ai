@@ -303,6 +303,121 @@ function PrettyJson({ data }: { data: unknown }) {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function renderAssistantParts(parts: any[]) {
+  let finalIdx = -1;
+  for (let i = parts.length - 1; i >= 0; i--) {
+    if (parts[i].type === "text") {
+      finalIdx = i;
+      break;
+    }
+  }
+  const stepParts = finalIdx === -1 ? parts : parts.slice(0, finalIdx);
+  const finalPart = finalIdx === -1 ? null : parts[finalIdx];
+
+  const steps = stepParts.filter(
+    (p) =>
+      p.type === "text" ||
+      p.type === "dynamic-tool" ||
+      (typeof p.type === "string" && p.type.startsWith("tool-"))
+  );
+
+  return (
+    <>
+      {steps.length > 0 && (
+        <Collapsible defaultOpen={false} className="mb-3 rounded-xl border bg-muted/30">
+          <CollapsibleTrigger className="group flex w-full items-center justify-between gap-2 px-3 py-2 text-xs font-medium">
+            <span className="flex items-center gap-2">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              خطوات تنفيذ الوكيل
+              <span className="rounded-full bg-primary/10 text-primary px-2 py-0.5 text-[10px]">
+                {steps.length}
+              </span>
+            </span>
+            <ChevronDown className="h-3.5 w-3.5 transition-transform group-data-[state=open]:rotate-180" />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="px-3 pb-3 pt-1 space-y-2">
+            {steps.map((part, i) => (
+              <StepRow key={i} index={i + 1} part={part} />
+            ))}
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+      {finalPart && <MessageResponse>{finalPart.text}</MessageResponse>}
+    </>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function StepRow({ index, part }: { index: number; part: any }) {
+  const isTool =
+    part.type === "dynamic-tool" ||
+    (typeof part.type === "string" && part.type.startsWith("tool-"));
+
+  if (!isTool) {
+    return (
+      <div className="flex gap-2 text-xs">
+        <StepBadge index={index} icon={<Sparkles className="h-3 w-3" />} />
+        <div className="flex-1 rounded-lg bg-background border p-2 whitespace-pre-wrap leading-relaxed">
+          {part.text}
+        </div>
+      </div>
+    );
+  }
+
+  const done = part.state === "output-available";
+  const toolName =
+    part.type === "dynamic-tool"
+      ? part.toolName
+      : part.type.split("-").slice(1).join("-");
+
+  return (
+    <div className="flex gap-2 text-xs">
+      <StepBadge
+        index={index}
+        icon={done ? <CheckCircle2 className="h-3 w-3" /> : <Wrench className="h-3 w-3" />}
+        tone={done ? "success" : "default"}
+      />
+      <div className="flex-1">
+        <Tool defaultOpen={false}>
+          <ToolHeader type={part.type} state={part.state} toolName={toolName} />
+          <ToolContent>
+            <ToolInput input={part.input} />
+            <ToolOutput
+              output={part.output ? <PrettyJson data={part.output} /> : null}
+              errorText={part.errorText}
+            />
+          </ToolContent>
+        </Tool>
+      </div>
+    </div>
+  );
+}
+
+function StepBadge({
+  index,
+  icon,
+  tone = "default",
+}: {
+  index: number;
+  icon: React.ReactNode;
+  tone?: "default" | "success";
+}) {
+  return (
+    <div className="flex flex-col items-center gap-1 pt-1">
+      <div
+        className={cn(
+          "flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold shrink-0",
+          tone === "success" ? "bg-success-soft text-success" : "bg-primary/10 text-primary"
+        )}
+      >
+        {index}
+      </div>
+      <div className="text-muted-foreground">{icon}</div>
+    </div>
+  );
+}
+
 function RaedMark({ size = 32 }: { size?: number }) {
   return (
     <div
