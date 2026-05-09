@@ -245,34 +245,15 @@ export default function Real() {
             {messages.map((m) => (
               <Message from={m.role} key={m.id}>
                 <MessageContent>
-                  {m.parts.map((part, idx) => {
-                    if (part.type === "text") {
-                      return m.role === "assistant" ? (
-                        <MessageResponse key={idx}>{part.text}</MessageResponse>
-                      ) : (
-                        <span key={idx} className="whitespace-pre-wrap">
-                          {part.text}
-                        </span>
-                      );
-                    }
-                    if (part.type?.startsWith("tool-") || part.type === "dynamic-tool") {
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      const tp = part as any;
-                      return (
-                        <Tool key={idx} defaultOpen={false}>
-                          <ToolHeader type={tp.type} state={tp.state} />
-                          <ToolContent>
-                            <ToolInput input={tp.input} />
-                            <ToolOutput
-                              output={tp.output ? <PrettyJson data={tp.output} /> : null}
-                              errorText={tp.errorText}
-                            />
-                          </ToolContent>
-                        </Tool>
-                      );
-                    }
-                    return null;
-                  })}
+                  {m.role === "assistant"
+                    ? renderAssistantParts(m.parts)
+                    : m.parts.map((part, idx) =>
+                        part.type === "text" ? (
+                          <span key={idx} className="whitespace-pre-wrap">
+                            {part.text}
+                          </span>
+                        ) : null
+                      )}
                 </MessageContent>
               </Message>
             ))}
