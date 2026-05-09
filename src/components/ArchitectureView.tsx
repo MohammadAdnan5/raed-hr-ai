@@ -224,7 +224,7 @@ export function ArchitectureView() {
             {[
               ["React 18", "Vite · TS"],
               ["Tailwind", "RTL-first"],
-              ["LLM Gateway", "Lovable AI"],
+              ["LLM Gateway", "AI Gateway"],
               ["Postgres", "RLS · Vector"],
               ["RAG", "Policy Index"],
               ["Edge Funcs", "Serverless"],
