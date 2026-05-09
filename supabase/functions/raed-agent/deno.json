@@ -1,0 +1,7 @@
+{
+  "imports": {
+    "npm:ai": "npm:ai@6.0.177",
+    "npm:zod": "npm:zod@4.4.3",
+    "npm:@ai-sdk/openai-compatible": "npm:@ai-sdk/openai-compatible@2.0.47"
+  }
+}
