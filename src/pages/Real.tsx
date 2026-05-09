@@ -135,7 +135,7 @@ export default function Real() {
         <div className="p-3 border-b flex items-center gap-2">
           <RaedMark />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold leading-tight">راعد · الوكيل الحقيقي</p>
+            <p className="text-sm font-bold leading-tight">رائد · الوكيل الحقيقي</p>
             <p className="text-[10px] text-muted-foreground">Lovable AI · Tools · Streaming</p>
           </div>
         </div>
@@ -206,11 +206,11 @@ export default function Real() {
             {messages.length === 0 && (
               <ConversationEmptyState
                 icon={<RaedMark size={48} />}
-                title="مرحباً، أنا راعد"
+                title="مرحباً، أنا رائد"
                 description="اسألني عن سياساتك، أرصدتك، أو اطلب خطاباً — سأستخدم الأدوات لتنفيذ ذلك فعلياً."
               >
                 <RaedMark size={48} />
-                <h3 className="font-bold text-base mt-3">مرحباً، أنا راعد</h3>
+                <h3 className="font-bold text-base mt-3">مرحباً، أنا رائد</h3>
                 <p className="text-sm text-muted-foreground max-w-sm">
                   وكيلك الذكي للموارد البشرية. اطلب خطاباً، استعلم عن سياسة، أو احسب راتبك.
                 </p>
@@ -266,7 +266,7 @@ export default function Real() {
             {status === "submitted" && (
               <Message from="assistant">
                 <MessageContent>
-                  <Shimmer>راعد يفكر...</Shimmer>
+                  <Shimmer>رائد يفكر...</Shimmer>
                 </MessageContent>
               </Message>
             )}
@@ -284,7 +284,7 @@ export default function Real() {
           <PromptInput onSubmit={handleSubmit}>
             <PromptInputTextarea
               ref={inputRef}
-              placeholder="اسأل راعد أي شيء..."
+              placeholder="اسأل رائد أي شيء..."
               disabled={isLoading}
             />
             <PromptInputFooter className="justify-end">
