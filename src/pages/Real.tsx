@@ -558,6 +558,8 @@ function StepDot({
       {index}
     </div>
   );
+}
+
 function HudPill({
   icon,
   label,
