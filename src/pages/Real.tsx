@@ -344,7 +344,7 @@ export default function Real() {
               <Message from={m.role} key={m.id}>
                 <MessageContent>
                   {m.role === "assistant"
-                    ? renderAssistantParts(m.parts)
+                    ? renderAssistantParts(m.parts, devMode)
                     : m.parts.map((part, idx) =>
                         part.type === "text" ? (
                           <span key={idx} className="whitespace-pre-wrap">
@@ -352,6 +352,9 @@ export default function Real() {
                           </span>
                         ) : null
                       )}
+                  {devMode && (
+                    <RawMessageJson message={m} />
+                  )}
                 </MessageContent>
               </Message>
             ))}
